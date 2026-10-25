@@ -1,0 +1,227 @@
+/* Colors, type and page layout. Everything is in rem so the three text sizes scale the whole app. */
+
+:root {
+  --navy: #1f3a68;
+  --cream: #f6efdc;
+  --beige: #d8cbb0;
+  --yellow: #ffd23f;
+  --amber: #e08a1e;
+  --line: 2px solid #1f3a68;
+
+  --font-body: 'Atkinson Hyperlegible Next', 'Atkinson Fallback', Verdana, sans-serif;
+  --font-title: 'Young Serif', 'Young Serif Fallback', Georgia, serif;
+
+  --speed-fast: 100ms;
+  --speed: 200ms;
+  --speed-flip: 250ms;
+}
+
+/* Fallback faces sized close to the real ones so the swap does not shift the layout much. */
+@font-face {
+  font-family: 'Atkinson Fallback';
+  src: local('Verdana'), local('Arial');
+  size-adjust: 96%;
+}
+@font-face {
+  font-family: 'Young Serif Fallback';
+  src: local('Georgia'), local('Times New Roman');
+  size-adjust: 104%;
+}
+
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--cream);
+}
+html.ts-large {
+  font-size: 125%;
+}
+html.ts-largest {
+  font-size: 150%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--cream);
+  color: var(--navy);
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  line-height: 1.45;
+  /* Young Serif has old-style figures by default; a 1 can read as a capital I. */
+  font-variant-numeric: lining-nums;
+  overflow-wrap: break-word;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-title);
+  font-weight: 400;
+  line-height: 1.2;
+  font-variant-numeric: lining-nums;
+  margin: 0;
+}
+h1 {
+  font-size: 1.75rem;
+}
+h2 {
+  font-size: 1.375rem;
+}
+h3 {
+  font-size: 1.25rem;
+}
+p {
+  margin: 0;
+}
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+/* Plain numbered steps keep their numbers inside the page edge. */
+ol:not([class]) {
+  padding-left: 1.5rem;
+}
+strong,
+b {
+  font-weight: 700;
+}
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+a {
+  color: var(--navy);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+img,
+svg {
+  display: block;
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--navy);
+}
+
+/* Focus ring for keyboard users. The .mouse class is set on pointer input and cleared on keys. */
+:focus {
+  outline: 3px solid var(--navy);
+  outline-offset: 2px;
+}
+html.mouse :focus {
+  outline: none;
+}
+html.mouse input:focus,
+html.mouse textarea:focus {
+  outline: 3px solid var(--navy);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The sheet: one centered column of printout paper. */
+.sheet {
+  position: relative;
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+  /* Notches and system bars: the Android app sets --safe-area-inset-*, iPhone home screen apps use env(). */
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  padding-bottom: calc(2rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  padding-left: calc(1rem + var(--safe-area-inset-left, env(safe-area-inset-left, 0px)));
+  padding-right: calc(1rem + var(--safe-area-inset-right, env(safe-area-inset-right, 0px)));
+  min-height: 100vh;
+}
+
+/* On wide screens the column gets tractor-feed sprocket strips on both sides. */
+@media (min-width: 45em) {
+  .sheet {
+    border-left: 2px dashed var(--beige);
+    border-right: 2px dashed var(--beige);
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  .sheet::before,
+  .sheet::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='5' fill='none' stroke='%23D8CBB0' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 1.5rem 1.5rem;
+    background-repeat: repeat-y;
+  }
+  .sheet::before {
+    left: -3.25rem;
+  }
+  .sheet::after {
+    right: -3.25rem;
+  }
+}
+
+/* Spacing helpers on an 8 px grid. */
+.stack > * + * {
+  margin-top: 1rem;
+}
+.stack-sm > * + * {
+  margin-top: 0.5rem;
+}
+.stack-lg > * + * {
+  margin-top: 1.5rem;
+}
+
+.small {
+  font-size: 1.0625rem;
+}
+.center {
+  text-align: center;
+}
+
+/* Perforation between sections of the sheet. */
+.perf {
+  border: 0;
+  border-top: 2px dashed var(--beige);
+  margin: 1.5rem 0;
+  height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 1ms !important;
+}

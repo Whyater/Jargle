@@ -1,0 +1,28 @@
+.round .battery-wrap p {
+  margin-top: 0.5rem;
+}
+.first-label {
+  font-weight: 700;
+}
+.bottom-bar .first-label {
+  margin-bottom: 0.5rem;
+  font-size: 1.0625rem;
+}
+.bottom-bar.measuring .first-label {
+  display: none;
+}
+.battery-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.battery-row .battery {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.battery-row .mascot-btn {
+  flex: none;
+}
+.battery-row .mascot-btn {
+  margin: 0 -0.25rem 0 0.5rem;
+}
