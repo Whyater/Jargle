@@ -88,12 +88,22 @@ test.describe('offline', () => {
       await endlessLink.click();
       await expect(page.getByRole('heading', { name: 'Endless', exact: true })).toBeVisible();
       await page.getByRole('button', { name: 'Start', exact: true }).click();
-      const firstOption = page.locator('[data-option]').first();
-      await expect(firstOption).toBeVisible();
-      await firstOption.click();
-      // Any answer locks the options, which shows the run took the answer while offline.
+      const options = page.locator('[data-option]');
+      if (await options.count() > 0) {
+        await expect(options.first()).toBeVisible();
+        await options.first().click();
+      } else {
+        const tiles = page.locator('.lt-tray .lt-tile');
+        await expect(tiles.first()).toBeVisible();
+        const tileCount = await tiles.count();
+        for (let i = 0; i < tileCount; i += 1) {
+          if (await tiles.count() === 0) break;
+          await tiles.first().click();
+        }
+      }
+      // Any answer locks the controls, which shows the run took the answer while offline.
       // (A right answer moves on after about 900 ms, so check right away.)
-      await expect(page.locator('[data-option][aria-disabled="true"]').first()).toBeAttached();
+      await expect(page.locator('[data-option][aria-disabled="true"], .lt-tile[aria-disabled="true"]').first()).toBeAttached();
     } catch (error) {
       throw new Error(`${error}\nDiagnostics:\n${diagnosticText(lines)}`);
     } finally {
@@ -101,7 +111,7 @@ test.describe('offline', () => {
     }
   });
 
-  test('a daily round page reloads offline', async ({ page, context }) => {
+  test('the daily game page reloads offline', async ({ page, context }) => {
     await openFresh(page);
     await prepareServiceWorker(page);
     const lines = collectDiagnostics(page);
@@ -109,7 +119,7 @@ test.describe('offline', () => {
 
     const wordCard = page.getByRole('region', { name: 'Word of the Day' });
     await wordCard.getByRole('button', { name: 'Play', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Check', exact: true })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Keyboard' })).toBeVisible();
     const dailyUrl = page.url();
 
     await context.setOffline(true);
@@ -119,7 +129,7 @@ test.describe('offline', () => {
       const response = await page.reload();
       expect(response?.fromServiceWorker()).toBe(true);
       await waitForOfflineScreen(page, lines);
-      await expect(page.getByRole('button', { name: 'Check', exact: true })).toBeVisible();
+      await expect(page.getByRole('group', { name: 'Keyboard' })).toBeVisible();
     } catch (error) {
       throw new Error(`${error}\nDiagnostics:\n${diagnosticText(lines)}`);
     } finally {

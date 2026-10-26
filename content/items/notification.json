@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "your-phone",
   "term": "notification",
+  "puzzle": "NOTIFY",
   "meaning": "A message or alert from an app or phone that tells you something may need your attention.",
   "clues": [
     "It is an alert that appears on your phone when something may need your attention.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "The app buzzed my phone at a time I did not pick, with this ___ and not a note from a person.",
+    "wrong": [
+      "alarm",
+      "text message"
+    ]
+  },
+  "why": "Too many alerts get noisy, so you can limit which apps send them.",
+  "short": "Alert from an app or phone",
+  "situations": [
+    {
+      "text": "An alert on your phone says there is a problem with an account and has a link. You tap the link.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "Open the app yourself. Do not follow the link."
+    }
+  ]
 }

@@ -778,15 +778,46 @@ html.ts-largest .badge-shelf {
 .how-demo {
   pointer-events: none;
 }
-.how-demo .answer-card {
-  min-height: 3rem;
+/* The clue pictures: a counter with dots like the game, then the clue in its own small card. */
+.how-clue {
+  padding: var(--s3);
+  border: 2px solid var(--line-color);
+  border-radius: var(--radius);
+  background: var(--bg);
 }
-.how-demo .answer-card + .answer-card {
+.how-clue-count {
+  display: flex;
+  align-items: center;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+.how-clue-text {
+  margin-top: var(--s2);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+/* One demo row of tiles: smaller than the game's, and centered. */
+.how-row {
+  max-width: 14rem;
+  margin: 0 auto;
+}
+.how-row .jg-tile {
+  font-size: 1.375rem;
+}
+.how-key li {
+  display: flex;
+  align-items: center;
+}
+.how-key li + li {
   margin-top: var(--s2);
 }
-.how-demo.energy {
-  box-shadow: none;
-  background: var(--bg);
+.how-key .jg-mini-tile {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: var(--s3);
 }
 .how-notes p {
   display: flex;

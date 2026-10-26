@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "money-on-your-phone",
   "term": "digital wallet",
+  "puzzle": "WALLET",
   "meaning": "An app on your phone that stores payment cards so you can pay with the phone.",
   "clues": [
     "It is a way to pay for something.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "I added my bank's card to the ___ app on my phone, so I can tap to pay at a store.",
+    "wrong": [
+      "mobile check deposit",
+      "online bill pay"
+    ]
+  },
+  "why": "It keeps your cards ready on your phone, so keep your phone locked.",
+  "short": "Phone app that holds payment cards",
+  "situations": [
+    {
+      "text": "You add a card from your own bank to your phone wallet, and you keep your phone locked.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "Only add a card you got from your own bank or card company."
+    }
+  ]
 }

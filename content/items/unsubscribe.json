@@ -3,12 +3,13 @@
   "kind": "term",
   "topic": "internet-talk",
   "term": "unsubscribe",
+  "puzzle": "REMOVE",
   "meaning": "To ask a mailing list to stop sending you messages.",
   "clues": [
     "It is an action you can take on a message or sender.",
     "It is a request you send to a mailing list, asking it to take you off.",
     "Your email app may show it as a banner or a button when you open a message.",
-    "It removes your address from that list, but other messages may still arrive.",
+    "It takes your email off that list, but other messages may still arrive.",
     "Its name starts with U and means to stop being signed up."
   ],
   "assumes": [
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "To ask a mailing list to take my address off, I used the ___ link in its email.",
+    "wrong": [
+      "delete",
+      "report"
+    ]
+  },
+  "why": "It asks a list to take you off, but other messages may still arrive.",
+  "short": "Ask a list to stop sending",
+  "situations": [
+    {
+      "text": "An odd email you never signed up for has an unsubscribe link, and you click it right away.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "If a message looks odd, do not click its link. Open the service yourself."
+    }
+  ]
 }

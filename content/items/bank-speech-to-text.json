@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I spoke my message out loud and ___ typed it on the screen for me.",
+    "wrong": [
+      "text to speech",
+      "translation app"
+    ]
+  },
+  "why": "It listens to you talk and types the words for you.",
+  "short": "Spoken words turned into typed words"
 }

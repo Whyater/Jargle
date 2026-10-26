@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "how-the-internet-works",
   "term": "URL",
+  "puzzle": "ADDRESS",
   "meaning": "The address of a web page.",
   "clues": [
     "It points online.",
@@ -69,5 +70,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "I typed the ___ into the bar at the top of my browser to open one web page.",
+    "wrong": [
+      "email address",
+      "username"
+    ]
+  },
+  "why": "Reading it letter by letter can help you spot a fake page.",
+  "short": "The address of a web page",
+  "situations": [
+    {
+      "text": "A message sends you a link. You pause and type the web address you already know instead.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "You can type the known address instead of using the link."
+    }
+  ]
 }

@@ -40,6 +40,8 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - name: Test release scripts
+        run: node --test scripts/make-latest-json.test.mjs
       - name: Install web dependencies
         working-directory: web
         run: npm ci
@@ -144,7 +146,10 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.web.outputs.version }}
           MATRIX_NAME: ${{ matrix.name }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
+          test -n "$TAURI_SIGNING_PRIVATE_KEY" || { echo "TAURI_SIGNING_PRIVATE_KEY secret is missing or empty" >&2; exit 1; }
           if [ "$MATRIX_NAME" = mac ]; then
             npx tauri build --ci --target universal-apple-darwin --config "{\"version\":\"$RELEASE_VERSION\"}"
           else
@@ -157,6 +162,10 @@ jobs:
           mkdir -p dist-out
           cp desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg dist-out/Jargle-mac.dmg
           COPYFILE_DISABLE=1 tar -czf dist-out/Jargle-mac.app.tar.gz -C desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos Jargle.app
+          cp desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/Jargle.app.tar.gz dist-out/Jargle-mac-update.app.tar.gz
+          cp desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/Jargle.app.tar.gz.sig dist-out/Jargle-mac-update.app.tar.gz.sig
+          test -s dist-out/Jargle-mac-update.app.tar.gz
+          test -s dist-out/Jargle-mac-update.app.tar.gz.sig
           lipo -info desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/Jargle.app/Contents/MacOS/Jargle
           codesign -dv desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/Jargle.app
           JARGLE_RELEASES_BASE="file://$PWD/dist-out" JARGLE_INSTALL_DIR="$RUNNER_TEMP/Apps" JARGLE_NO_LAUNCH=1 bash install/install.sh
@@ -167,6 +176,8 @@ jobs:
         run: |
           mkdir -p dist-out
           cp desktop/src-tauri/target/release/bundle/nsis/*-setup.exe dist-out/Jargle-windows-setup.exe
+          cp desktop/src-tauri/target/release/bundle/nsis/*-setup.exe.sig dist-out/Jargle-windows-setup.exe.sig
+          test -s dist-out/Jargle-windows-setup.exe.sig
           cp desktop/src-tauri/target/release/bundle/msi/*.msi dist-out/Jargle-windows.msi
       - name: Test Windows installer
         if: matrix.name == 'windows'
@@ -283,6 +294,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           pattern: '*'
@@ -302,7 +314,17 @@ jobs:
           find release-artifacts -type f -name '*.msi' -exec cp {} upload/Jargle-windows.msi \;
           find release-artifacts -type f -name 'Jargle-android.apk' -exec cp {} upload/Jargle-android.apk \;
           find release-artifacts -type f -name 'jargle-web.tar.gz' -exec cp {} upload/jargle-web.tar.gz \;
-          for asset in Jargle-mac.dmg Jargle-mac.app.tar.gz Jargle-windows-setup.exe Jargle-windows.msi Jargle-android.apk jargle-web.tar.gz; do
+          find release-artifacts -type f -name 'Jargle-mac-update.app.tar.gz' -exec cp {} upload/Jargle-mac-update.app.tar.gz \;
+          find release-artifacts -type f -name 'Jargle-mac-update.app.tar.gz.sig' -exec cp {} upload/Jargle-mac-update.app.tar.gz.sig \;
+          find release-artifacts -type f -name 'Jargle-windows-setup.exe.sig' -exec cp {} upload/Jargle-windows-setup.exe.sig \;
+          node scripts/make-latest-json.mjs \
+            --version "${{ needs.web.outputs.version }}" \
+            --base-url "$GITHUB_SERVER_URL/$GH_REPO/releases/download/$TAG" \
+            --mac-sig upload/Jargle-mac-update.app.tar.gz.sig \
+            --windows-sig upload/Jargle-windows-setup.exe.sig \
+            --notes "Jargle $TAG" \
+            --out upload/latest.json
+          for asset in Jargle-mac.dmg Jargle-mac.app.tar.gz Jargle-mac-update.app.tar.gz Jargle-windows-setup.exe Jargle-windows.msi Jargle-android.apk jargle-web.tar.gz latest.json; do
             if [ ! -f "upload/$asset" ]; then
               echo "Missing release asset: $asset" >&2
               exit 1
@@ -318,6 +340,8 @@ jobs:
           for asset in Jargle-mac.dmg Jargle-mac.app.tar.gz Jargle-windows-setup.exe Jargle-windows.msi Jargle-android.apk jargle-web.tar.gz; do
             gh release upload "$TAG" "upload/$asset" --clobber
           done
+          gh release upload "$TAG" upload/Jargle-mac-update.app.tar.gz --clobber
+          gh release upload "$TAG" upload/latest.json --clobber
           if [ "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true ]; then
             gh release edit "$TAG" --draft=false
           fi

@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I turned on ___ so my phone would cut back on quiet background work and last longer.",
+    "wrong": [
+      "dark mode",
+      "do not disturb"
+    ]
+  },
+  "why": "It helps your battery last longer by cutting back background work.",
+  "short": "Setting that makes battery last longer"
 }

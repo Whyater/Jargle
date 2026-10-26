@@ -59,5 +59,40 @@
       "url": "https://www.aarp.org/personal-technology/stay-safe-in-chatbot-world/"
     }
   ],
-  "checked_on": null
+  "checked_on": null,
+  "words": [
+    "bank-large-language-model",
+    "bank-prompt",
+    "bank-machine-learning",
+    "bank-text-to-speech"
+  ],
+  "situations": [
+    {
+      "text": "A chatbot that sounds very sure of itself is always right.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "AARP says chatbots can sound confident even when an answer is wrong."
+    },
+    {
+      "text": "You type your bank account number into a chatbot to get better advice.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "AARP says to keep bank accounts and passwords out of a chat."
+    },
+    {
+      "text": "A chatbot gives you money advice. Should you check it with a trusted source first?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "AARP says to double-check answers about health, money, or legal matters."
+    }
+  ]
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "internet-talk",
   "term": "going viral",
+  "puzzle": "VIRAL",
   "meaning": "When a post, video, or photo gets shared by many people very fast.",
   "clues": [
     "It is about something online that gets a lot of attention.",
@@ -63,5 +64,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "So many people passed her cat video along so fast that it started ___.",
+    "wrong": [
+      "clickbait",
+      "a meme"
+    ]
+  },
+  "why": "Fast sharing does not prove a post is true, so check before you pass it on.",
+  "short": "Shared by many people very fast",
+  "situations": [
+    {
+      "text": "A post everyone is sharing asks you to send private details or money to join in.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "Close it and check the claim somewhere else."
+    }
+  ]
 }

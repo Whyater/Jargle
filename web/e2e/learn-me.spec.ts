@@ -13,6 +13,8 @@ interface Lesson {
   cards: { text: string }[];
   checks: { prompt: string; answer: string }[];
   takeaway: string;
+  words?: string[];
+  situations?: { text: string; options: string[]; answer: string }[];
 }
 
 const TYPO_MESSAGE = 'That code has a typo. Check each character and try again.';
@@ -34,6 +36,20 @@ function lessonName(lesson: Lesson): string {
   return lesson.number + '. ' + lesson.title;
 }
 
+function lessonDoneName(lesson: Lesson): RegExp {
+  const escaped = lessonName(lesson).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp('^' + escaped + '\\. Done');
+}
+
+function normalizeSentence(text: string): string {
+  return text.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function matchesBlankSentence(displayed: string, sentence: string): boolean {
+  const shown = normalizeSentence(displayed.replace(/\bblank\b/g, ''));
+  return shown === normalizeSentence(sentence.replace('___', ''));
+}
+
 /** The message line on a screen (the toast area also has role status, so stay inside main). */
 function announcer(page: Page): Locator {
   return page.getByRole('main').getByRole('status');
@@ -44,29 +60,90 @@ function announcer(page: Page): Locator {
  * question correctly, and ends back on the Learn tab. Returns the lesson that was finished.
  */
 async function finishNextLesson(page: Page, bundle: Bundle): Promise<Lesson> {
-  await page.getByRole('link', { name: /\. Up next$/ }).click();
+  // The current node bobs continuously, so navigate using its stable href.
+  const nextLink = page.getByRole('link', { name: /\. Up next$/ }).first();
+  const nextHref = await nextLink.getAttribute('href');
+  if (!nextHref) throw new Error('next lesson link had no href');
+  await page.goto(new URL(nextHref, page.url()).toString());
   await expect(page).toHaveURL(/#\/lesson\//);
   const id = decodeURIComponent(new URL(page.url()).hash.replace('#/lesson/', ''));
   const lesson = lessonById(bundle, id);
   await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible();
 
-  for (let i = 0; i < lesson.cards.length; i += 1) {
-    await expect(page.getByText(lesson.cards[i].text, { exact: true })).toBeVisible();
-    const lastCard = i === lesson.cards.length - 1;
-    await page.getByRole('button', { name: lastCard ? 'Start the questions' : 'Next', exact: true }).click();
+  const words = (lesson.words || []).map((id) => ({ id, item: (bundle.items as Record<string, any>)[id] })).filter((x) => x.item);
+  const itemForTerm = (term: string) => words.find((x) => x.item.term === term)?.item;
+  const clickAnswer = async (answer: string) => {
+    const button = page.getByRole('button', { name: answer, exact: true }).first();
+    await expect(button).toBeVisible();
+    await button.click();
+  };
+
+  // Sessions can requeue a missed step. Keep reading the current step from its class.
+  for (let guard = 0; guard < 60; guard += 1) {
+    if (await page.getByText('Lesson complete!', { exact: true }).count()) break;
+    const step = page.locator('[class*="ls-step-"]').first();
+    await expect(step).toBeVisible();
+    const className = (await step.getAttribute('class')) || '';
+    if (className.includes('ls-step-learn')) {
+      const next = page.getByRole('button', { name: /^(Next|Got it)$/ }).last();
+      await next.click();
+    } else if (className.includes('ls-step-pairs')) {
+      const terms = await step.locator('ul[aria-label="Words"] button').allTextContents();
+      for (const term of terms) {
+        const item = itemForTerm(term.trim());
+        if (!item) throw new Error('No bundle item for pair ' + term);
+        await step.locator('ul[aria-label="Words"] button', { hasText: term.trim() }).click();
+        await step.locator('ul[aria-label="Meanings"] button', { hasText: item.short || item.meaning }).click();
+      }
+      await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    } else if (className.includes('ls-step-blank')) {
+      const sentence = await step.locator('.ls-sentence').innerText();
+      const item = words.find((x) => {
+        const blank = x.item.blank;
+        if (!blank) return false;
+        return matchesBlankSentence(sentence, blank.sentence);
+      })?.item;
+      if (!item) throw new Error('Could not match blank sentence: ' + sentence);
+      await clickAnswer(item.term);
+    } else if (className.includes('ls-step-situation')) {
+      const sceneText = (await step.locator('.ls-scene-text').count())
+        ? (await step.locator('.ls-scene-text').innerText()).trim()
+        : '';
+      if (sceneText) {
+        // Match the displayed scene exactly. Many situations share answer labels.
+        const situation = (lesson.situations || []).find((s) => s.text === sceneText);
+        if (!situation) throw new Error('Could not match situation: ' + sceneText);
+        await clickAnswer(situation.answer);
+      } else {
+        const prompt = (await step.locator('.ls-ask').innerText()).trim();
+        const check = lesson.checks.find((c) => c.prompt === prompt);
+        if (!check) throw new Error('Could not match check: ' + prompt);
+        await clickAnswer(check.answer);
+      }
+    } else if (className.includes('ls-step-build')) {
+      const clue = (await step.locator('.ls-card-text').innerText()).trim();
+      const item = words.find((x) => x.item.meaning === clue || x.item.short === clue)?.item;
+      if (!item) throw new Error('Could not match build clue: ' + clue);
+      await page.keyboard.type(item.term);
+    } else if (className.includes('ls-step-meaning')) {
+      const term = (await step.locator('.ls-word').innerText()).trim();
+      const item = itemForTerm(term);
+      if (!item) throw new Error('No bundle item for meaning ' + term);
+      await clickAnswer(item.meaning);
+    } else if (className.includes('ls-step-recap')) {
+      await page.getByRole('button', { name: 'Finish lesson', exact: true }).click();
+    } else {
+      throw new Error('Unknown lesson step: ' + className);
+    }
+    if (await page.getByRole('button', { name: 'Continue', exact: true }).count()) {
+      await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    }
   }
 
-  for (let i = 0; i < lesson.checks.length; i += 1) {
-    const check = lesson.checks[i];
-    await expect(page.getByText(check.prompt, { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: check.answer, exact: true }).click();
-    await expect(page.getByText('Right.', { exact: true })).toBeVisible();
-    const lastQuestion = i === lesson.checks.length - 1;
-    await page.getByRole('button', { name: lastQuestion ? 'Finish' : 'Next question', exact: true }).click();
-  }
-
-  // The same words are also in a hidden status line for screen readers, so take the visible one.
-  await expect(page.getByText('Lesson done.', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Lesson complete!', { exact: true })).toBeVisible();
+  await expect(page.locator('.win-xp .pill')).toHaveText(/^\s*\+30 XP\s*$/);
+  // The finished screen shows source links under this heading.
+  await expect(page.getByRole('heading', { name: 'Where this comes from', level: 2 })).toBeVisible();
   await page.getByRole('link', { name: 'Back to Learn', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Lessons' })).toBeVisible();
   return lesson;
@@ -138,41 +215,11 @@ test.describe('Learn tab', () => {
     const total = lessonList(bundle).length;
     await openTab(page, 'Learn');
 
-    // Walk the first lesson to its finished state.
-    await page.getByRole('link', { name: /\. Up next$/ }).click();
-    await expect(page).toHaveURL(/#\/lesson\//);
-    const lesson = lessonById(bundle, decodeURIComponent(new URL(page.url()).hash.replace('#/lesson/', '')));
-    await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible();
-    await expect(page.getByText('Lesson ' + lesson.number, { exact: true })).toBeVisible();
-    await expect(page.getByText('Card 1 of ' + lesson.cards.length, { exact: true })).toBeVisible();
-
-    for (let i = 0; i < lesson.cards.length; i += 1) {
-      await expect(page.getByText(lesson.cards[i].text, { exact: true })).toBeVisible();
-      const lastCard = i === lesson.cards.length - 1;
-      await page.getByRole('button', { name: lastCard ? 'Start the questions' : 'Next', exact: true }).click();
-    }
-
-    for (let i = 0; i < lesson.checks.length; i += 1) {
-      const check = lesson.checks[i];
-      await expect(page.getByText('Question ' + (i + 1) + ' of ' + lesson.checks.length, { exact: true })).toBeVisible();
-      await expect(page.getByText(check.prompt, { exact: true })).toBeVisible();
-      await page.getByRole('button', { name: check.answer, exact: true }).click();
-      await expect(page.getByText('Right.', { exact: true })).toBeVisible();
-      const lastQuestion = i === lesson.checks.length - 1;
-      await page.getByRole('button', { name: lastQuestion ? 'Finish' : 'Next question', exact: true }).click();
-    }
-
-    // Finished state: the cheer, 30 XP for a lesson, the takeaway and the way back.
-    await expect(page.getByText('Lesson done.', { exact: true }).first()).toBeVisible();
-    // The pill is the steady one. A floating copy next to it is hidden from screen readers and fades.
-    await expect(page.locator('.win-xp .pill')).toHaveText(/^\s*\+30 XP\s*$/);
-    await expect(page.getByText('Remember this', { exact: true })).toBeVisible();
-    await expect(page.getByText(lesson.takeaway, { exact: true })).toBeVisible();
-    await page.getByRole('link', { name: 'Back to Learn', exact: true }).click();
+    const lesson = await finishNextLesson(page, bundle);
 
     // Back on Learn the lesson is done, and the count went up.
     await expect(page.getByRole('heading', { name: 'Lessons' })).toBeVisible();
-    await expect(page.getByRole('link', { name: lessonName(lesson) + '. Done', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: lessonDoneName(lesson) })).toBeVisible();
     await expect(page.getByText('1 of ' + total + ' done', { exact: true })).toBeVisible();
   });
 });
@@ -245,7 +292,7 @@ test.describe('Me tab', () => {
 
     await page.getByRole('link', { name: /^How to play/ }).click();
     await expect(page.getByRole('heading', { name: 'How to play', level: 1 })).toBeVisible();
-    await expect(page.getByText("Guess today's tech word from clues. One new word every day.", { exact: true })).toBeVisible();
+    await expect(page.getByText("Guess today's tech word in 6 tries. One new word every day.", { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page).toHaveURL(/#\/me$/);
     await expect(page.getByRole('region', { name: 'Your level' })).toBeVisible();
@@ -279,7 +326,7 @@ test.describe('progress code', () => {
       const other = await context.newPage();
       await openFresh(other, { hash: '#/learn' });
       await expect(other.getByText('0 of ' + total + ' done', { exact: true })).toBeVisible();
-      await expect(other.getByRole('link', { name: lessonName(lesson) + '. Done', exact: true })).toHaveCount(0);
+      await expect(other.getByRole('link', { name: lessonDoneName(lesson) })).toHaveCount(0);
 
       await goToHash(other, '#/code/use');
       await expect(other.getByRole('heading', { name: 'Use a progress code', level: 1 })).toBeVisible();
@@ -290,7 +337,7 @@ test.describe('progress code', () => {
       // The lesson from the first browser is done here too.
       await goToHash(other, '#/learn');
       await expect(other.getByText('1 of ' + total + ' done', { exact: true })).toBeVisible();
-      await expect(other.getByRole('link', { name: lessonName(lesson) + '. Done', exact: true })).toBeVisible();
+      await expect(other.getByRole('link', { name: lessonDoneName(lesson) })).toBeVisible();
     } finally {
       await context.close();
     }

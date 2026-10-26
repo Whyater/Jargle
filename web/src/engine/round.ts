@@ -245,10 +245,15 @@ function finishRound(
   record.finished_on = today;
   // Freeze the battery so later views do not change the result.
   record.end_bars = barsLeft(record);
+  const day = dayFromKey(key);
+  const jargle = day === null || !state.jargle ? undefined : state.jargle[String(day)];
+  const alreadyCounted = day !== null && (state.countedDays || []).indexOf(day) !== -1;
+  const bonusRound = record.mode === 'daily' && day !== null
+    && ((jargle && jargle.status !== 'playing') || alreadyCounted);
   // A replay earns XP at the practice rate, so a daily only pays the daily rate once.
   state.xp = (state.xp || 0) + xpFor({
     type: 'round',
-    mode: record.replay ? 'practice' : record.mode,
+    mode: record.replay || bonusRound ? 'practice' : record.mode,
     status: record.status as 'solved' | 'learned',
     bars: record.end_bars || 0,
   });
@@ -256,7 +261,6 @@ function finishRound(
   if (!state.lastFinished) state.lastFinished = {};
   state.lastFinished[item.id] = today;
 
-  const day = dayFromKey(key);
   if (day !== null) {
     addSortedNumber(state.finishedDays || (state.finishedDays = []), day);
     addUnique(state.soloDone || (state.soloDone = []), item.id);

@@ -3,10 +3,11 @@
   "kind": "term",
   "topic": "money-on-your-phone",
   "term": "online banking",
+  "puzzle": "BANKING",
   "meaning": "Using a bank's website or app to check accounts, move money, or pay bills over the internet.",
   "clues": [
-    "It is a way to do money tasks without going to a bank building.",
-    "You use a bank's website and sign in to see account information.",
+    "It is a way to do money tasks without going to a branch.",
+    "You use a website or app and sign in to see your account information.",
     "You may check a balance, move money, or pay a bill there.",
     "The FDIC says to check the web address and never give your sign-in details to someone who contacts you.",
     "Its name has two words and starts with O."
@@ -68,5 +69,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "I checked my balance and paid a bill from my couch using ___ on the bank's website.",
+    "wrong": [
+      "ATM",
+      "check deposit"
+    ]
+  },
+  "why": "It saves a trip, but always check the web address before you sign in.",
+  "short": "Banking through a website or app",
+  "situations": [
+    {
+      "text": "You check the web address of your bank's site before you sign in.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "Checking the web address before you sign in helps you avoid a fake site."
+    }
+  ]
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "locks-and-keys",
   "term": "encryption",
+  "puzzle": "ENCRYPT",
   "meaning": "A way to scramble data so only approved people can read it.",
   "clues": [
     "It is a way to protect information.",
@@ -67,5 +68,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "My bank page scrambles my data so strangers cannot read it. That protection is called ___.",
+    "wrong": [
+      "firewall",
+      "screen PIN"
+    ]
+  },
+  "why": "It keeps private messages and bank pages from people who should not read them.",
+  "short": "Scrambles data for approved readers only",
+  "situations": [
+    {
+      "text": "Encryption scrambles data so only approved people can read it.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "Only people with the right key can read the scrambled version."
+    }
+  ]
 }

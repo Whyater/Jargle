@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "internet-talk",
   "term": "podcast",
+  "puzzle": "PODCAST",
   "meaning": "An online audio show made in episodes for a phone or computer.",
   "clues": [
     "It is a way to get programs through the internet.",
@@ -67,5 +68,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "My favorite ___ adds a new spoken episode on a set schedule, and I play it when I choose.",
+    "wrong": [
+      "audiobook",
+      "live video"
+    ]
+  },
+  "why": "You choose when to listen, and you can stop whenever you want.",
+  "short": "Audio show made in episodes",
+  "situations": [
+    {
+      "text": "A podcast episode only plays live, so you have to listen when it airs.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "Episodes are made to be heard whenever you choose, and you can stop when you want."
+    }
+  ]
 }

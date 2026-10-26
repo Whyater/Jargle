@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "money-on-your-phone",
   "term": "subscription",
+  "puzzle": "RENEW",
   "meaning": "A plan where a company charges you again and again for a product or service.",
   "clues": [
     "It has to do with paying for something over a stretch of time.",
@@ -67,5 +68,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "The free trial turned into a ___ that charged my card again and again.",
+    "wrong": [
+      "one-time purchase",
+      "layaway"
+    ]
+  },
+  "why": "A free trial can turn into charges, so learn how to cancel.",
+  "short": "Plan with repeating charges",
+  "situations": [
+    {
+      "text": "Before a free trial, you read how much it will cost and mark the cancel date on your calendar.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "A free trial can turn into a paid plan if you do not cancel in time."
+    }
+  ]
 }

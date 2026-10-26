@@ -15,22 +15,34 @@
       {
         "label": "main",
         "title": "Jargle",
-        "width": 420,
-        "height": 780,
+        "width": 1100,
+        "height": 760,
         "minWidth": 360,
         "minHeight": 560,
         "resizable": true,
         "center": true,
         "create": false,
-        "backgroundColor": [246, 239, 220, 255]
+        "backgroundColor": [255, 248, 238, 255]
       }
     ],
     "security": {
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' ipc: http://ipc.localhost https://whyater.github.io https://*.sslip.io"
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU1NTc0NUQ5RTAxOEJCMzIKUldReXV4amcyVVZYNWRoYkozSWpvODNLM216akVPUHU4WjdCVXFHRG5XV1o5dUhlT2MwN2pIRGkK",
+      "endpoints": [
+        "https://github.com/Whyater/Jargle/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "publisher": "Whyater",
     "category": "Education",

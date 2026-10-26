@@ -3,12 +3,13 @@
   "kind": "term",
   "topic": "talking-computers",
   "term": "algorithm",
+  "puzzle": "STEPS",
   "meaning": "A set of steps for solving a problem or doing a task.",
   "clues": [
     "It is an idea used in computing.",
     "It is something a computer uses behind the scenes to get a job done.",
-    "It gives step-by-step instructions for solving a problem.",
-    "The steps can be followed in a set order to reach an answer.",
+    "It works like a recipe: a computer does one small action after another.",
+    "The small actions come in a set order, and following them all leads to an answer.",
     "Its name starts with A and has nine letters."
   ],
   "assumes": [
@@ -65,5 +66,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "Like a recipe, a computer follows steps in a set order. Those steps are its ___.",
+    "wrong": [
+      "database",
+      "firewall"
+    ]
+  },
+  "why": "Computers follow them behind the scenes, and one missing step can spoil the result.",
+  "short": "Steps for solving a task",
+  "situations": [
+    {
+      "text": "If a step is missing from a list of steps, the result is always still right.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "If a step is missing, the result may be wrong."
+    }
+  ]
 }

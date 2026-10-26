@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "money-on-your-phone",
   "term": "cryptocurrency",
+  "puzzle": "CRYPTO",
   "meaning": "Online money with no government backing that can change value quickly.",
   "clues": [
     "It is a digital way to hold or send value.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "He bought ___, online money with no government behind it. Its value can rise or fall fast.",
+    "wrong": [
+      "wire transfer",
+      "prepaid card"
+    ]
+  },
+  "why": "Its value can swing fast, and payments are often hard to reverse.",
+  "short": "Online money not backed by government",
+  "situations": [
+    {
+      "text": "A stranger on the phone says you must pay a bill with cryptocurrency right away.",
+      "options": [
+        "Scam",
+        "Safe"
+      ],
+      "answer": "Scam",
+      "why": "A person who demands this payment may be running a scam."
+    }
+  ]
 }

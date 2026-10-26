@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A small window suddenly appeared on top of the page with an ad. It was a ___.",
+    "wrong": [
+      "browser tab",
+      "modem"
+    ]
+  },
+  "why": "It often shows an ad or a message that appears on its own.",
+  "short": "Small window that suddenly appears"
 }

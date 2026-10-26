@@ -4,6 +4,10 @@ use tauri::WebviewWindowBuilder;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        // Updates come from the GitHub release (see plugins.updater in tauri.conf.json).
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        // Lets the app relaunch itself after an update installs.
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let window_config = &app.config().app.windows[0];
             WebviewWindowBuilder::from_config(app.handle(), window_config)?

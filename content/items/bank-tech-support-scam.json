@@ -63,5 +63,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A stranger said my computer had a problem and offered to fix it, then asked for money. That was a ___.",
+    "wrong": [
+      "prize scam",
+      "romance scam"
+    ]
+  },
+  "why": "A stranger offers a fix, then asks for money or control of your computer.",
+  "short": "Fake computer help that wants money"
 }

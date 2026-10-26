@@ -22,6 +22,21 @@ import type {
   TopicId,
 } from './types';
 
+// --- Daily Jargle (v2.1) ---
+import {
+  JARGLE_TRIES as realJargleTries,
+  puzzleAnswer as realPuzzleAnswer,
+  scoreGuess as realScoreGuess,
+  keyboardStates as realKeyboardStates,
+  checkGuess as realCheckGuess,
+  cluesShown as realCluesShown,
+  jargleView as realJargleView,
+  submitJargleGuess as realSubmitJargleGuess,
+  jargleShareText as realJargleShareText,
+  jargleResultLine as realJargleResultLine,
+} from './jargle';
+import type { JargleView } from './jargle';
+
 import { todayLocal as realTodayLocal, dayNumber as realDayNumber, dateOfDay as realDateOfDay, addDays as realAddDays, longDate as realLongDate } from './dates';
 import { newState as realNewState } from './state';
 import { startRound as realStartRound, roundView as realRoundView, applyRound as realApplyRound, replayRound as realReplayRound, shareText as realShareText, shareLines as realShareLines } from './round';
@@ -36,6 +51,10 @@ import { DEMO_JUDGE_LINE as realDemoJudgeLine, demoState as realDemoState } from
 import { buildQuestion as realBuildQuestion, isCorrect as realIsCorrect, QUESTION_KINDS as realQuestionKinds } from './questions';
 import { startEndless as realStartEndless, answerEndless as realAnswerEndless, nextEndlessQuestion as realNextEndlessQuestion, finishEndless as realFinishEndless, endlessPool as realEndlessPool, comboMultiplier as realComboMultiplier, ENDLESS_HEARTS as realEndlessHearts } from './endless';
 import { xpFor as realXpFor, levelFromXp as realLevelFromXp, addXp as realAddXp } from './xp';
+// --- Desktop rail (v2.1) ---
+import { lastSevenDays as realLastSevenDays, todayGoals as realTodayGoals, nextLesson as realNextLesson } from './rail';
+import type { RailDay, RailGoals } from './rail';
+// --- end Desktop rail ---
 
 // --- Dates -----------------------------------------------------
 
@@ -187,7 +206,23 @@ export interface HomeView {
 }
 
 export function homeView(_state: SaveState, _content: ContentBundle, _today: LocalDate): HomeView {
-  return realHomeView(_state, _content, _today);
+  const base = realHomeView(_state, _content, _today);
+  // --- Daily Jargle (v2.1) ---
+  // Home's older daily view reads only Clue Climb round records.
+  const day = realDayNumber(_today);
+  const record = _state.jargle && _state.jargle[String(day)];
+  const jargle = record ? realJargleView(_state, _content, _today) : null;
+  if (!record || !jargle) return base;
+  return {
+    ...base,
+    phase: record.status === 'playing' ? base.phase : 'played',
+    today: {
+      day: day,
+      key: base.today ? base.today.key : 'd:' + day,
+      started: true,
+      finished: record.status !== 'playing',
+    },
+  };
 }
 
 // --- Review ---------------------------------------------------------------
@@ -373,7 +408,41 @@ export function levelFromXp(_xp: number): LevelInfo {
   return realLevelFromXp(_xp);
 }
 
+// --- Desktop rail (v2.1) ---
+export function lastSevenDays(_state: SaveState, _today: LocalDate): RailDay[] {
+  return realLastSevenDays(_state, _today);
+}
+export function todayGoals(_state: SaveState, _today: LocalDate): RailGoals {
+  return realTodayGoals(_state, _today);
+}
+export function nextLesson(_state: SaveState, _content: ContentBundle, _today: LocalDate): Lesson | null {
+  return realNextLesson(_state, _content, _today);
+}
+export type { RailDay, RailGoals } from './rail';
+// --- end Desktop rail ---
+
+// --- Letter tiles (v2.1) ------------------------------------------------------
+export type { Tile, TileGroup } from './tiles';
 export {
+  answerLetters, answerGroups, dealTiles, shuffleTiles, checkTiles, nextHint, tileScore, letterPoints, decoyCount,
+  TILE_BASE, TILE_FAST_MS, TILE_QUICK_MS, TILE_FAST_BONUS, TILE_QUICK_BONUS, TILE_NO_HINT_BONUS,
+} from './tiles';
+/** Seeded random numbers for the tiles game, so a deal can be replayed (the UI must not use Math.random for deals). */
+export { seededRandom as tileRandom } from './text';
+// --- end Letter tiles ---------------------------------------------------------
+
+export {
+  // --- Daily Jargle (v2.1) ---
+  realJargleTries as JARGLE_TRIES,
+  realPuzzleAnswer as puzzleAnswer,
+  realScoreGuess as scoreGuess,
+  realKeyboardStates as keyboardStates,
+  realCheckGuess as checkGuess,
+  realCluesShown as cluesShown,
+  realJargleView as jargleView,
+  realSubmitJargleGuess as submitJargleGuess,
+  realJargleShareText as jargleShareText,
+  realJargleResultLine as jargleResultLine,
   realAddXp as addXp,
   realEndlessPool as endlessPool,
   realComboMultiplier as comboMultiplier,
@@ -398,3 +467,8 @@ export {
   realTodaysLesson as todaysLesson,
   realDealPtpSet as dealPtpSet,
 };
+
+// --- Lesson sessions (v2.1) ---
+export { buildLessonSession, buildWordSession, answerStep, nextStep, sessionDone, sessionStars, finishLessonSession, WORD_LESSON_XP } from './session';
+// --- Daily Jargle (v2.1) ---
+export type { JargleView };

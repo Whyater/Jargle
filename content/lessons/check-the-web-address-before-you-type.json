@@ -64,5 +64,40 @@
     }
   ],
   "checked_on": null,
-  "release_day": 2
+  "release_day": 2,
+  "words": [
+    "bank-pop-up",
+    "bank-ip-address",
+    "bank-server",
+    "bank-cache"
+  ],
+  "situations": [
+    {
+      "text": "A web address has a strange spelling. Does that alone prove the site is fake?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "A misspelling alone does not prove a site is fake, but check each letter."
+    },
+    {
+      "text": "A link in a message looks odd, so you type the address you already know yourself.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "CISA says to type the address yourself if you are sure you know it."
+    },
+    {
+      "text": "A link can look familiar and still lead to a fake site.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "The FTC says not to trust a link just because it looks familiar."
+    }
+  ]
 }

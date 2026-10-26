@@ -67,5 +67,40 @@
       "url": "https://www.cisa.gov/resources-tools/training/tips-stay-safe-while-surfing-web-part-2-accessing-websites-securely"
     }
   ],
-  "checked_on": null
+  "checked_on": null,
+  "words": [
+    "bank-domain-name",
+    "bank-https",
+    "bank-browser-tab",
+    "bank-download"
+  ],
+  "situations": [
+    {
+      "text": "Does https alone prove that a site is honest?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "It means the connection is encrypted, but it does not prove the site is honest."
+    },
+    {
+      "text": "Before you pay on a site, you read its web address for small spelling changes or a wrong ending.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "CISA says fake sites can use addresses with small spelling changes."
+    },
+    {
+      "text": "You click a search result without reading its address and type in your password.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "Read the address before you log in or pay. Type it yourself if you know it."
+    }
+  ]
 }

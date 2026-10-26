@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 3,
   "decisive_clue": 3,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "Instead of typing a long string of numbers, I typed my library's ___.",
+    "wrong": [
+      "IP address",
+      "server"
+    ]
+  },
+  "why": "It lets you remember a site by name, not by long numbers.",
+  "short": "Easy name of a website"
 }

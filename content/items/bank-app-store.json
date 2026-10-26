@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I opened the ___ on my phone to find and download a new app.",
+    "wrong": [
+      "home screen",
+      "voicemail"
+    ]
+  },
+  "why": "It is where you find and download apps for your phone.",
+  "short": "Place to find and get apps"
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "your-phone",
   "term": "widget",
+  "puzzle": "WIDGET",
   "meaning": "A small item on a phone screen that shows app information without opening the app.",
   "clues": [
     "It shows changing information on a phone screen without opening an app.",
@@ -67,5 +68,25 @@
   ],
   "checked_on": null,
   "difficulty": 1,
-  "decisive_clue": 1
+  "decisive_clue": 1,
+  "blank": {
+    "sentence": "I added a ___ to my home screen that shows the weather without opening the app.",
+    "wrong": [
+      "app icon",
+      "folder"
+    ]
+  },
+  "why": "It shows useful facts on your screen without opening the app.",
+  "short": "Small phone screen item showing info",
+  "situations": [
+    {
+      "text": "You added a widget you do not like. Do you have to keep it on your home screen forever?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "You can move, resize, or remove it on your home screen."
+    }
+  ]
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "talking-computers",
   "term": "Claude",
+  "puzzle": "CLAUDE",
   "meaning": "An AI made by Anthropic. It's a chatbot, a computer program built to talk with people. Ask it questions or hand it tasks.",
   "clues": [
     "It isn't a person, but it answers when you ask it something.",
@@ -77,5 +78,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "I asked ___, a chatbot made by Anthropic, to explain a word, and then I checked what it said.",
+    "wrong": [
+      "Gemini",
+      "Copilot"
+    ]
+  },
+  "why": "AI chatbots are easy to find now, so know what they are and check their answers.",
+  "short": "An AI chatbot made by Anthropic",
+  "situations": [
+    {
+      "text": "A chatbot asks you to type your bank number so it can answer better.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "Do not type passwords or bank numbers into a chatbot."
+    }
+  ]
 }

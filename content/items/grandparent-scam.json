@@ -3,11 +3,12 @@
   "kind": "term",
   "topic": "scams-and-fakes",
   "term": "grandparent scam",
+  "puzzle": "GRAND",
   "meaning": "A fake emergency call or message in which a crook pretends to be a grandchild who needs help.",
   "clues": [
     "A stranger lies about who they are and pushes you to act fast.",
     "The person contacting you claims to be someone else.",
-    "The caller says a grandchild is in trouble and needs quick help.",
+    "The caller pretends to be your son's or daughter's kid, and says they are in trouble and need quick help.",
     "The safest move is to pause and check with your family using a number you know.",
     "Its name starts with G and includes a word for a parent's parent."
   ],
@@ -63,5 +64,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "A caller said, 'Grandma, I am in trouble, send help now.' That was a ___.",
+    "wrong": [
+      "charity scam",
+      "utility scam"
+    ]
+  },
+  "why": "Crooks use a family emergency to rush you, so pause and call your family.",
+  "short": "Fake grandchild needing urgent help",
+  "situations": [
+    {
+      "text": "A caller says your grandchild is in trouble. You hang up and call your grandchild on a number you know.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "A second call can clear up a lot."
+    }
+  ]
 }

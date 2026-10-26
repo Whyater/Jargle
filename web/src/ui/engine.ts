@@ -32,4 +32,23 @@ export const engine = {
   encodeProgressCode: api.encodeProgressCode,
   decodeProgressCode: api.decodeProgressCode,
   demoState: api.demoState,
+  // --- Lesson sessions (v2.1) ---
+  buildLessonSession: api.buildLessonSession,
+  buildWordSession: api.buildWordSession,
+  answerStep: api.answerStep,
+  nextStep: api.nextStep,
+  sessionDone: api.sessionDone,
+  finishLessonSession: api.finishLessonSession,
+  // --- Desktop rail (v2.1) ---
+  lastSevenDays: api.lastSevenDays,
+  todayGoals: api.todayGoals,
+  nextLesson: api.nextLesson,
+  // --- end Desktop rail ---
+  // --- Daily Jargle (v2.1) ---
+  jargleView: api.jargleView,
+  submitJargleGuess: api.submitJargleGuess,
+  checkGuess: api.checkGuess,
+  jargleShareText: api.jargleShareText,
+  jargleResultLine: api.jargleResultLine,
+  xpFor: api.xpFor,
 };

@@ -3,6 +3,7 @@ import { ClueClimb } from './ClueClimb';
 import { MeaningMatch } from './MeaningMatch';
 import { NameIt } from './NameIt';
 import { OldNew } from './OldNew';
+import { SpellIt } from './SpellIt';
 import { TrueFalse } from './TrueFalse';
 import type { QuestionProps } from './types';
 
@@ -18,6 +19,7 @@ export function QuestionView(props: QuestionViewProps) {
   if (q.kind === 'name') return <NameIt key={q.id} {...props} question={q} />;
   if (q.kind === 'truefalse') return <TrueFalse key={q.id} {...props} question={q} />;
   if (q.kind === 'oldnew') return <OldNew key={q.id} {...props} question={q} />;
+  if (q.kind === 'tiles') return <SpellIt key={q.id} {...props} question={q} />;
   return <ClueClimb key={q.id} {...props} question={q} />;
 }
 
@@ -28,4 +30,5 @@ export const KIND_NAMES: Record<Question['kind'], string> = {
   truefalse: 'True or False',
   oldnew: 'Old or New',
   clue: 'Clue Climb',
+  tiles: 'Spell it',
 };

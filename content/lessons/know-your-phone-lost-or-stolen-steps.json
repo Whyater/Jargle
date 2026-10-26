@@ -64,5 +64,40 @@
     }
   ],
   "checked_on": null,
-  "release_day": 2
+  "release_day": 2,
+  "words": [
+    "bank-lock-screen",
+    "bank-sim-card",
+    "bank-factory-reset",
+    "bank-location-sharing"
+  ],
+  "situations": [
+    {
+      "text": "You cannot find your phone, so you use its find-my-phone feature to locate and lock it.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "The FCC says to try to locate the device and lock it from afar."
+    },
+    {
+      "text": "Your phone is missing. Is it fine to wait before you tell your phone company?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "The FCC says to tell your phone company right away. It may be able to turn off service and block the device."
+    },
+    {
+      "text": "If your phone was stolen, it is a good idea to report it to the police.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "The FCC says to report a theft to the police."
+    }
+  ]
 }

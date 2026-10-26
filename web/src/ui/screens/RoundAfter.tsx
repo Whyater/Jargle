@@ -29,6 +29,7 @@ import type { MascotPose } from '../art';
 import { Announcer } from '../components/BottomBar';
 import { levelReached, markSeenLevel, readXp } from './homeLogic';
 import './round.css';
+import { wordLessonHref } from '../lesson/start';
 
 /** The energy meter: a bolt, the six bars, the number left and the rules in one short line. */
 export function EnergyMeter({
@@ -390,6 +391,7 @@ function DoneStep({ view }: { view: RoundView }) {
     else openRound(result.entry.key, result.entry.itemId, view.record.mode);
   }
   const counted = view.record.mode === 'daily' && view.record.counted_day !== undefined;
+  const wordItem = app.content!.items[view.record.item_id];
   // A grace finish counts for yesterday; today's word may still be waiting.
   const graceful =
     counted && view.record.counted_day !== engine.dayNumber(app.today) && home.today && !home.today.finished;
@@ -443,6 +445,16 @@ function DoneStep({ view }: { view: RoundView }) {
             title="Play Endless"
             note="Keep going as long as you like."
           />
+          {/* v2.1 lesson sessions: a 4 step mini lesson on the daily word just played. */}
+          {view.record.mode === 'daily' && wordItem && wordItem.blank ? (
+            <NextCard
+              href={wordLessonHref(wordItem.id)}
+              tone="grape"
+              icon="learn"
+              title={'Learn ' + wordItem.term + ' in 4 steps'}
+              note="Fill the blank, spot the scam, and more."
+            />
+          ) : null}
           {counted && home.todaysLesson && !graceful ? (
             <NextCard
               href={hrefFor('lesson', home.todaysLesson.id)}

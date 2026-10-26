@@ -6,6 +6,16 @@ import { seededRandom, seededShuffle } from './text';
 
 export const QUESTION_KINDS: QuestionKind[] = ['meaning', 'name', 'truefalse', 'oldnew', 'clue'];
 
+// Tiles are tried on 0.4 of picks and never twice in a row. Only single words
+// with 3 to 9 letters qualify, so they make up about 1 in 4 questions on the real word list.
+export const TILES_CHANCE = 0.4;
+
+/** True for a short single word that works well as phone letter tiles. */
+export function canSpell(term: string): boolean {
+  // Hyphens, spaces and long words make poor tile games on a phone.
+  return /^[A-Za-z]{3,9}$/.test(term);
+}
+
 /** Builds one question. The same (item, kind, seed) always gives the same question. */
 export function buildQuestion(content: ContentBundle, itemId: string, kind: QuestionKind, seed: string): Question {
   const item = content.items[itemId];
@@ -70,6 +80,19 @@ export function buildQuestion(content: ContentBundle, itemId: string, kind: Ques
       answer: item.old_tech ? 'Old tech' : "Today's tech",
     };
   }
+  if (kind === 'tiles') {
+    return {
+      id: kind + ':' + itemId + ':' + seed,
+      kind: kind,
+      itemId: itemId,
+      difficulty: item.difficulty,
+      why: item.term + ': ' + item.meaning,
+      meaning: item.meaning,
+      term: item.term,
+      options: [item.term],
+      answer: item.term,
+    };
+  }
   return {
     id: kind + ':' + itemId + ':' + seed,
     kind: kind,
@@ -84,5 +107,10 @@ export function buildQuestion(content: ContentBundle, itemId: string, kind: Ques
 
 /** True if `choice` is the right option. */
 export function isCorrect(question: Question, choice: string): boolean {
+  if (question.kind === 'tiles') {
+    const clean = (value: string): string => value.toUpperCase().replace(/[^A-Z]/g, '');
+    if (clean(choice) === '') return false;
+    return clean(choice) === clean(question.answer);
+  }
   return choice === question.answer;
 }

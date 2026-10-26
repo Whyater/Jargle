@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "internet-talk",
   "term": "emoji",
+  "puzzle": "EMOJI",
   "meaning": "A tiny picture, like a face or an animal, that you put in a message to show a feeling.",
   "clues": [
     "People use it in messages to show how they feel.",
@@ -81,5 +82,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "She tapped the face button on her keyboard, and a tiny smiling ___ went into her message.",
+    "wrong": [
+      "meme",
+      "GIF"
+    ]
+  },
+  "why": "A tiny picture can show a feeling that plain typed words may miss.",
+  "short": "Tiny picture that shows a feeling",
+  "situations": [
+    {
+      "text": "You want to add a tiny face to your text. Can you tap the emoji button or the globe on your keyboard?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "Tap that button, pick one, and send it."
+    }
+  ]
 }

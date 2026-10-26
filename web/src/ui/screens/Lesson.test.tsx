@@ -18,14 +18,13 @@ function buttonWithText(root: HTMLElement, text: string): HTMLButtonElement | nu
   return null;
 }
 
-describe('LessonScreen checks', () => {
+describe('LessonScreen session', () => {
   it('starts each question unanswered', async () => {
     window.scrollTo = () => undefined;
     const content = buildContent();
+    // The test lesson has no words, so its session is the learn cards, its 3 checks, then a recap.
     const lesson = content.lessons[0];
     const save = newState();
-    // Skip the learn cards: start on the first check.
-    save.lessons[lesson.id] = { card: lesson.cards.length, answers: [], finished_on: null };
     setAppForDev({ status: 'ready', content, save, today: '2026-11-06', canSave: false });
 
     const root = document.createElement('div');
@@ -33,16 +32,25 @@ describe('LessonScreen checks', () => {
     render(<LessonScreen lessonId={lesson.id} />, root);
     await wait(20);
 
+    // Read through the learn cards.
+    for (let i = 0; i < lesson.cards.length - 1; i++) {
+      buttonWithText(root, 'Next')!.click();
+      await wait(20);
+    }
+    buttonWithText(root, 'Got it')!.click();
+    await wait(20);
+
     const first = buttonWithText(root, lesson.checks[0].options[0]);
     expect(first).not.toBeNull();
     first!.click();
     await wait(20);
-    buttonWithText(root, 'Next question')!.click();
+    // The feedback sheet says why.
+    expect(root.textContent).toContain(lesson.checks[0].why);
+    buttonWithText(root, 'Continue')!.click();
     await wait(20);
 
-    // Question 2 must not show Next question or Finish until it is answered.
-    expect(buttonWithText(root, 'Next question')).toBeNull();
-    expect(buttonWithText(root, 'Finish')).toBeNull();
+    // Question 2 must not show Continue until it is answered.
+    expect(buttonWithText(root, 'Continue')).toBeNull();
     const second = buttonWithText(root, lesson.checks[1].options[0]);
     expect(second!.getAttribute('aria-disabled')).toBeNull();
   });

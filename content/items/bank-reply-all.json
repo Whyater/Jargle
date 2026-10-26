@@ -69,5 +69,14 @@
   "checked_on": null,
   "difficulty": 3,
   "decisive_clue": 3,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I pressed ___ and my answer went to everyone who got the first email, not just the sender.",
+    "wrong": [
+      "livestream",
+      "username"
+    ]
+  },
+  "why": "Everyone on the email sees your answer, so check before you press it.",
+  "short": "Email answer sent to everyone"
 }

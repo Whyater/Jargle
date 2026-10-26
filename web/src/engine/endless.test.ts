@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildContent, makeItem } from './__fixtures__/content';
 import { dateOfDay } from './dates';
-import { buildQuestion } from './questions';
+import { buildQuestion, canSpell } from './questions';
 import { newState } from './state';
 import {
   answerEndless,
@@ -121,6 +121,7 @@ describe('endless mode', () => {
     expect(state.endlessGames).toBe(1);
     expect(state.endlessBest).toBe(scored.score);
     expect(state.xp).toBe(scored.xp);
+    expect(state.endlessLastDay).toBe(dateOfDay(1));
   });
 
   it('returns an over run for an empty released pool', () => {
@@ -160,6 +161,34 @@ describe('endless mode', () => {
     }
     expect(difficulties.slice(0, 3).every((d) => d === 1)).toBe(true);
     expect(difficulties.some((d) => d === 2 || d === 3)).toBe(true);
+  });
+
+  it('keeps the five old kinds unchanged when tiles cannot fire', () => {
+    const original = buildContent({ days: 20, oldTechCount: 10 });
+    const content = { ...original, items: { ...original.items } };
+    for (const id of Object.keys(content.items)) {
+      content.items[id] = { ...content.items[id], term: content.items[id].term + '-x' };
+    }
+    let run = startEndless(newState(), content, dateOfDay(5), 44);
+    const sequence: string[] = [];
+    for (let i = 0; i < 30; i++) {
+      const question = questionOf(run);
+      sequence.push(question.itemId + ':' + question.kind);
+      run = answerEndless(run, { choice: question.answer }).run;
+      if (run.over) run = { ...run, over: false, hearts: 3 };
+      run = nextEndlessQuestion(run, content);
+    }
+    expect(sequence).toEqual([
+      'dewey-decimal-system:truefalse', 'rotary-phone:name', 'old-7:meaning',
+      'phone-book:clue', 'wi-fi:name', 'screenshot:oldnew', 'ptp-1:truefalse',
+      'fax-machine:clue', 'old-10:meaning', 'two-factor-login:name', 'old-9:clue',
+      'old-8:name', 'emoji:meaning', 'floppy-disk:oldnew', 'cassette-tape:name',
+      'ptp-2:clue', 'claude:meaning', 'wi-fi:truefalse', 'old-9:oldnew',
+      'floppy-disk:clue', 'phone-book:name', 'two-factor-login:clue',
+      'dewey-decimal-system:oldnew', 'fax-machine:truefalse', 'emoji:meaning',
+      'cassette-tape:truefalse', 'ptp-2:clue', 'rotary-phone:name',
+      'screenshot:meaning', 'old-7:clue',
+    ]);
   });
 
   it('keeps a deterministic sequence and final run for the same seed', () => {
@@ -307,4 +336,68 @@ describe('endless mode', () => {
     const empty = nextEndlessQuestion({ ...run, pool: ['gone-1'] }, content);
     expect(empty.over).toBe(true);
   });
+  it('mixes spell tiles without adjacent tiles and only uses spellable terms', () => {
+    const content = buildContent({ days: 20, oldTechCount: 10 });
+    const spellWords = ['cache', 'phone', 'email', 'cloud', 'emoji', 'zelle', 'spam', 'word'];
+    const spellPool = endlessPool(content, dateOfDay(5));
+    for (let i = 0; i < spellPool.length; i++) content.items[spellPool[i]].term = spellWords[i % spellWords.length];
+    let run = startEndless(newState(), content, dateOfDay(5), 1234);
+    let tiles = 0;
+    let previous: string | null = null;
+    for (let i = 0; i < 400; i++) {
+      const question = questionOf(run);
+      if (question.kind === 'tiles') {
+        tiles++;
+        expect(canSpell(question.term)).toBe(true);
+        expect(previous).not.toBe('tiles');
+      } else if (previous !== null) {
+        expect(question.kind).not.toBe(previous);
+      }
+      previous = question.kind;
+      run = answerEndless(run, { choice: question.answer }).run;
+      if (run.over) run = { ...run, over: false, hearts: 3 };
+      run = nextEndlessQuestion(run, content);
+    }
+    const share = tiles / 400;
+    expect(share).toBeGreaterThanOrEqual(0.15);
+    expect(share).toBeLessThanOrEqual(0.35);
+  });
+
+  it('scores tiles from the reported score and clamps it', () => {
+    const content = buildContent();
+    const question = buildQuestion(content, 'claude', 'tiles', 'tile-score');
+    const original = startEndless(newState(), content, dateOfDay(1), 125);
+    const check = (tileScore: number | undefined, combo: number = 0) => {
+      const run = { ...original, question, answered: false, combo, score: 0, xp: 0 };
+      return answerEndless(run, { choice: question.answer, tileScore });
+    };
+    expect(check(18).points).toBe(18);
+    expect(check(18, 2).points).toBe(36);
+    expect(check(undefined).points).toBe(10);
+    expect(check(99).points).toBe(18);
+    expect(check(3).points).toBe(10);
+    const wrong = answerEndless({ ...original, question, answered: false, combo: 4 }, { choice: '__wrong__', tileScore: 18 });
+    expect(wrong.correct).toBe(false);
+    expect(wrong.points).toBe(0);
+    expect(wrong.run.hearts).toBe(2);
+    expect(wrong.run.combo).toBe(0);
+  });
+
+  it('keeps tile runs deterministic for the same seed', () => {
+    const content = buildContent({ days: 20, oldTechCount: 10 });
+    const play = () => {
+      let run = startEndless(newState(), content, dateOfDay(5), 126);
+      const kinds: string[] = [];
+      for (let i = 0; i < 80; i++) {
+        const question = questionOf(run);
+        kinds.push(question.kind);
+        run = answerEndless(run, { choice: question.answer }).run;
+        if (run.over) run = { ...run, over: false, hearts: 3 };
+        run = nextEndlessQuestion(run, content);
+      }
+      return kinds;
+    };
+    expect(play()).toEqual(play());
+  });
+
 });

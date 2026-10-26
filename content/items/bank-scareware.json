@@ -63,5 +63,14 @@
   "checked_on": null,
   "difficulty": 3,
   "decisive_clue": 3,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A pop-up warned me my device was infected and scared me into paying for a useless fix. That was ___.",
+    "wrong": [
+      "robocall",
+      "spoofing"
+    ]
+  },
+  "why": "It scares you into paying for a useless fix or a harmful download.",
+  "short": "Fake infection warning pop-up"
 }

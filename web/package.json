@@ -14,6 +14,8 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.0",
     "preact": "^11.0.2"
   },
   "devDependencies": {

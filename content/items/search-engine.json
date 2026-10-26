@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "how-the-internet-works",
   "term": "search engine",
+  "puzzle": "SEARCH",
   "meaning": "A service that finds web pages when you type words or questions into it.",
   "clues": [
     "It keeps a giant list of pages from many different websites, so it can point you to them.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 1,
-  "decisive_clue": 1
+  "decisive_clue": 1,
+  "blank": {
+    "sentence": "I typed my question into the ___, which keeps a giant list of pages and ranks the best ones first.",
+    "wrong": [
+      "browser",
+      "online encyclopedia"
+    ]
+  },
+  "why": "Check who wrote a page and when it was updated before you trust it.",
+  "short": "Finds web pages from your words",
+  "situations": [
+    {
+      "text": "A page comes up first in your search results. Does that prove the page is right?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "Look at who wrote the page and when it was updated."
+    }
+  ]
 }

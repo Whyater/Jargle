@@ -6,7 +6,7 @@ import { dayNumber } from './dates';
 import { builtOldTech, copyState, oldTechReleaseDay } from './state';
 import { seededRandom } from './text';
 import { xpFor } from './xp';
-import { QUESTION_KINDS, buildQuestion, isCorrect } from './questions';
+import { QUESTION_KINDS, TILES_CHANCE, buildQuestion, canSpell, isCorrect } from './questions';
 
 export const ENDLESS_HEARTS = 3;
 
@@ -83,7 +83,12 @@ export function answerEndless(run: EndlessRun, answer: EndlessAnswer): EndlessAn
     next.bestCombo = Math.max(run.bestCombo, next.combo);
     multiplier = comboMultiplier(next.combo);
     let base = 10;
-    if (run.question.kind === 'clue') {
+    if (run.question.kind === 'tiles') {
+      const tileScore = answer.tileScore;
+      if (tileScore !== undefined && !Number.isNaN(tileScore)) {
+        base = Math.max(10, Math.min(18, Math.round(tileScore)));
+      }
+    } else if (run.question.kind === 'clue') {
       const clues = Math.max(1, Math.min(3, answer.cluesUsed || 1));
       if (clues === 1) {
         base = 30;
@@ -111,6 +116,7 @@ export function nextEndlessQuestion(run: EndlessRun, content: ContentBundle): En
   if (run.over) return copyRun(run);
   const seedText = run.seed + ':' + run.asked;
   const random = seededRandom(seedText + ':pick');
+  const tilesRandom = seededRandom(seedText + ':tiles');
   let maxDifficulty = 3;
   if (run.correct < 3) {
     maxDifficulty = 1;
@@ -153,27 +159,40 @@ export function nextEndlessQuestion(run: EndlessRun, content: ContentBundle): En
     }
     if (filtered.length > 0) candidates = filtered;
   }
+  const current = run.question;
+  let wantTiles = (!current || current.kind !== 'tiles') && tilesRandom() < TILES_CHANCE;
+  if (wantTiles) {
+    const tileCandidates: string[] = [];
+    for (let i = 0; i < candidates.length; i++) {
+      if (canSpell(content.items[candidates[i]].term)) tileCandidates.push(candidates[i]);
+    }
+    if (tileCandidates.length > 0) {
+      candidates = tileCandidates;
+    } else {
+      wantTiles = false;
+    }
+  }
   const itemId = candidates[Math.floor(random() * candidates.length)];
   let kinds = QUESTION_KINDS;
-  const current = run.question;
   if (current) {
     kinds = [];
     for (let i = 0; i < QUESTION_KINDS.length; i++) {
       if (QUESTION_KINDS[i] !== current.kind) kinds.push(QUESTION_KINDS[i]);
     }
   }
-  const kind = kinds[Math.floor(random() * kinds.length)];
+  const kind = wantTiles ? 'tiles' : kinds[Math.floor(random() * kinds.length)];
   const question = buildQuestion(content, itemId, kind, seedText);
   used.push(itemId);
   return { ...run, used, question, asked: run.asked + 1, answered: false };
 }
 
 /** Ends the run: saves the best score, counts the game and adds the run's XP. Call it once per run. */
-export function finishEndless(state: SaveState, run: EndlessRun, _today: LocalDate): SaveState {
+export function finishEndless(state: SaveState, run: EndlessRun, today: LocalDate): SaveState {
   const result = copyState(state);
   result.endlessBest = Math.max(result.endlessBest || 0, run.score);
   result.endlessGames = (result.endlessGames || 0) + 1;
   result.xp = (result.xp || 0) + run.xp;
+  result.endlessLastDay = today;
   return result;
 }
 

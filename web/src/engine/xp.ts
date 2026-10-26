@@ -11,6 +11,10 @@ export function xpFor(action: XpAction): number {
     // A small bonus once a combo is going.
     return action.combo >= 3 ? 15 : 10;
   }
+  if (action.type === 'jargle') {
+    if (!action.won) return 10;
+    return 20 + 10 * (6 - action.guesses);
+  }
   // A finished Clue Climb round. Dailies are worth the most.
   const bars = Math.max(0, action.bars);
   if (action.mode === 'daily') {

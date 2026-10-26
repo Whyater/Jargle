@@ -65,5 +65,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "Away from home, my phone used ___ from my phone company's towers, and it counts against my plan.",
+    "wrong": [
+      "dark mode",
+      "voicemail"
+    ]
+  },
+  "why": "It works away from home, but it counts against your plan.",
+  "short": "Internet from your phone company's towers"
 }

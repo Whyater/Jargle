@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "scams-and-fakes",
   "term": "imposter scam",
+  "puzzle": "SCAM",
   "meaning": "A trick where someone acts like a trusted person or group to get your money or information.",
   "clues": [
     "Someone tricks you to get your money or personal details.",
@@ -75,5 +76,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "A caller pretended to be from my bank and pushed me to act fast. That kind of trick is called ___.",
+    "wrong": [
+      "investment scam",
+      "advance-fee loan scam"
+    ]
+  },
+  "why": "Pressure and threats are warning signs, so slow down and check.",
+  "short": "Crook pretends to be someone trusted",
+  "situations": [
+    {
+      "text": "A caller says they are from the government and threatens trouble unless you pay today.",
+      "options": [
+        "Scam",
+        "Safe"
+      ],
+      "answer": "Scam",
+      "why": "Urgency and threats are common warning signs."
+    }
+  ]
 }

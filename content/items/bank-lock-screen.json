@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "When I woke my phone, the ___ kept others out until I used my code, fingerprint, or face.",
+    "wrong": [
+      "home screen",
+      "voicemail"
+    ]
+  },
+  "why": "It keeps other people out of your phone until you unlock it.",
+  "short": "Wake screen that blocks others"
 }

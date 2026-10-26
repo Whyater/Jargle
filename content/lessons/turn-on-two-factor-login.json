@@ -63,5 +63,40 @@
       "url": "https://www.cisa.gov/secure-our-world/turn-mfa"
     }
   ],
-  "checked_on": null
+  "checked_on": null,
+  "words": [
+    "bank-one-time-code",
+    "bank-face-unlock",
+    "bank-firewall",
+    "bank-backup"
+  ],
+  "situations": [
+    {
+      "text": "A caller asks for the code that was just texted to you. Should you read it to them?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "The FTC says some people try to trick you into giving them the code."
+    },
+    {
+      "text": "Two-factor login is usually turned on for you from the start.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "It is not usually on by default. Look in your account settings."
+    },
+    {
+      "text": "You turn on two-factor login for your email first, since email is a sensitive account.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "The FTC says to start with your most sensitive accounts, like email and your bank."
+    }
+  ]
 }

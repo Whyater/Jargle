@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I got the chair now and will pay for it in four payments over a few weeks, using ___.",
+    "wrong": [
+      "direct deposit",
+      "autopay"
+    ]
+  },
+  "why": "You pay in smaller parts later, so keep track of each payment.",
+  "short": "Get it now, pay in parts"
 }

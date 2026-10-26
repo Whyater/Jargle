@@ -1,4 +1,4 @@
-import type { LessonRecord, RoundRecord, SaveState } from '../engine/types';
+import type { JargleRecord, LessonRecord, RoundRecord, SaveState } from '../engine/types';
 import { newState } from '../engine/state';
 
 export type StorageKey = 'jargle:v1' | 'jargle:demo:judge' | 'jargle:demo:new';
@@ -62,7 +62,49 @@ function readLessons(value: unknown): SaveState['lessons'] {
     if (typeof item.card !== 'number' || !Array.isArray(item.answers)
       || !item.answers.every((entry) => typeof entry === 'string')
       || (item.finished_on !== null && typeof item.finished_on !== 'string')) continue;
-    result[key] = item as unknown as LessonRecord;
+    const record = { ...item } as unknown as LessonRecord;
+    // Stars were added after the first lesson saves. Keep only valid values.
+    if (item.stars !== undefined && (typeof item.stars !== 'number' || item.stars < 1 || item.stars > 3 || !Number.isInteger(item.stars))) {
+      delete (record as { stars?: number }).stars;
+    }
+    result[key] = record;
+  }
+  return result;
+}
+
+// v2.1 lesson sessions
+function readWordLessons(value: unknown): SaveState['wordLessons'] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const result: Record<string, string> = {};
+  for (const key of Object.keys(value)) {
+    const date = (value as Record<string, unknown>)[key];
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) result[key] = date;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+// --- Daily Jargle (v2.1) ---
+function readJargle(value: unknown): SaveState['jargle'] {
+  if (value === undefined) return undefined;
+  const result: Record<string, JargleRecord> = {};
+  const source = asObject(value);
+  for (const key of Object.keys(source)) {
+    const item = asObject(source[key]);
+    const guesses = item.guesses;
+    const status = item.status;
+    if (!Array.isArray(guesses) || !guesses.every((entry) => typeof entry === 'string')) continue;
+    if (status !== 'playing' && status !== 'won' && status !== 'lost') continue;
+    if (typeof item.started_on !== 'string') continue;
+    if (item.finished_on !== undefined && typeof item.finished_on !== 'string') continue;
+    // XP paid is optional (older saves do not have it); keep it only when it is a sane number.
+    const xpPaid = typeof item.xp_paid === 'number' && item.xp_paid >= 0 && item.xp_paid <= 1000 ? item.xp_paid : undefined;
+    result[key] = {
+      guesses: [...guesses],
+      status,
+      started_on: item.started_on,
+      ...(item.finished_on === undefined ? {} : { finished_on: item.finished_on }),
+      ...(xpPaid === undefined ? {} : { xp_paid: xpPaid }),
+    };
   }
   return result;
 }
@@ -104,10 +146,11 @@ function readCount(value: unknown): number | undefined {
 }
 
 /** Copies XP and the Endless scores onto a state, skipping the ones that are missing. */
-function addScores(state: SaveState, xp: number | undefined, endlessBest: number | undefined, endlessGames: number | undefined): SaveState {
+function addScores(state: SaveState, xp: number | undefined, endlessBest: number | undefined, endlessGames: number | undefined, endlessLastDay?: string): SaveState {
   if (xp !== undefined) state.xp = xp;
   if (endlessBest !== undefined) state.endlessBest = endlessBest;
   if (endlessGames !== undefined) state.endlessGames = endlessGames;
+  if (endlessLastDay !== undefined) state.endlessLastDay = endlessLastDay;
   return state;
 }
 
@@ -130,6 +173,8 @@ function validState(value: unknown): SaveState | null {
     ...defaults,
     v: 1,
     rounds: readRounds(raw.rounds),
+    // --- Daily Jargle (v2.1) ---
+    ...(raw.jargle === undefined ? {} : { jargle: readJargle(raw.jargle) }),
     ptpSet,
     ptpTotal: typeof raw.ptpTotal === 'number' ? raw.ptpTotal : defaults.ptpTotal,
     ptpBest: typeof raw.ptpBest === 'number' ? raw.ptpBest : defaults.ptpBest,
@@ -139,6 +184,7 @@ function validState(value: unknown): SaveState | null {
     review: readReview(raw.review),
     reviewSeen: readReviewSeen(raw.reviewSeen),
     lessons: readLessons(raw.lessons),
+    wordLessons: readWordLessons(raw.wordLessons),
     badges: readBadges(raw.badges),
     missLineIndex: {
       floyd: typeof miss.floyd === 'number' ? miss.floyd : 0,
@@ -166,7 +212,11 @@ function validState(value: unknown): SaveState | null {
       bud: filterList(queue.bud, 'number') as number[],
     },
   };
-  return addScores(state, readCount(raw.xp), readCount(raw.endlessBest), readCount(raw.endlessGames));
+  // Desktop rail (v2.1): the last day an Endless run finished, kept only if it looks like a date.
+  const endlessLastDay = typeof raw.endlessLastDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.endlessLastDay)
+    ? raw.endlessLastDay
+    : undefined;
+  return addScores(state, readCount(raw.xp), readCount(raw.endlessBest), readCount(raw.endlessGames), endlessLastDay);
 }
 
 export function loadState(key: StorageKey): SaveState | null {
@@ -253,12 +303,16 @@ function sameArray(a: string[], b: string[]): boolean {
 function chooseLesson(mine: LessonRecord, theirs: LessonRecord): LessonRecord {
   const mineFinished = mine.finished_on !== null;
   const theirsFinished = theirs.finished_on !== null;
-  if (mineFinished !== theirsFinished) return theirsFinished ? theirs : mine;
-  if (mineFinished && theirsFinished) {
-    if ((theirs.finished_on as string) < (mine.finished_on as string)) return theirs;
-    return mine;
+  let chosen: LessonRecord;
+  if (mineFinished !== theirsFinished) chosen = theirsFinished ? theirs : mine;
+  else if (mineFinished && theirsFinished) {
+    if ((theirs.finished_on as string) < (mine.finished_on as string)) chosen = theirs;
+    else chosen = mine;
+  } else {
+    chosen = theirs.card > mine.card ? theirs : mine;
   }
-  return theirs.card > mine.card ? theirs : mine;
+  const stars = Math.max(mine.stars || 0, theirs.stars || 0);
+  return stars > 0 ? { ...chosen, stars } : { ...chosen };
 }
 
 function mergePtpSet(mine: SaveState['ptpSet'], theirs: SaveState['ptpSet']): SaveState['ptpSet'] {
@@ -308,6 +362,33 @@ function mergeMissLineQueue(mine: SaveState, theirs: SaveState): SaveState['miss
   return undefined;
 }
 
+// --- Daily Jargle (v2.1) ---
+function chooseJargle(mine: JargleRecord, theirs: JargleRecord): JargleRecord {
+  // A finished game beats one still going, a win beats a loss, then fewer guesses (the better
+  // result) wins. On a full tie keep this phone's copy, so both orders give the same result.
+  const mineFinished = mine.status !== 'playing';
+  const theirsFinished = theirs.status !== 'playing';
+  if (mineFinished !== theirsFinished) return theirsFinished ? theirs : mine;
+  if (!mineFinished) return theirs.guesses.length > mine.guesses.length ? theirs : mine;
+  if (mine.status !== theirs.status) return theirs.status === 'won' ? theirs : mine;
+  if (theirs.guesses.length < mine.guesses.length) return theirs;
+  return mine;
+}
+
+function mergeJargle(
+  mine: SaveState['jargle'],
+  theirs: SaveState['jargle'],
+): SaveState['jargle'] {
+  if (!mine && !theirs) return undefined;
+  const result: NonNullable<SaveState['jargle']> = {};
+  for (const key of Object.keys(mine || {})) result[key] = mine![key];
+  for (const key of Object.keys(theirs || {})) {
+    const incoming = theirs![key];
+    result[key] = result[key] ? chooseJargle(result[key], incoming) : incoming;
+  }
+  return result;
+}
+
 export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: number }): SaveState {
   const rounds: Record<string, RoundRecord> = { ...mine.rounds };
   for (const key of Object.keys(theirs.rounds)) {
@@ -335,6 +416,13 @@ export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: num
     lessons[key] = lessons[key] ? chooseLesson(lessons[key], theirs.lessons[key]) : theirs.lessons[key];
   }
 
+  // v2.1 lesson sessions: keep every word and the later completion date.
+  const wordLessons: Record<string, string> = { ...(mine.wordLessons || {}) };
+  for (const key of Object.keys(theirs.wordLessons || {})) {
+    const incoming = theirs.wordLessons![key];
+    if (!wordLessons[key] || incoming > wordLessons[key]) wordLessons[key] = incoming;
+  }
+
   const badges = { ...mine.badges };
   for (const key of Object.keys(theirs.badges) as Array<keyof SaveState['badges']>) {
     const incoming = theirs.badges[key];
@@ -345,6 +433,8 @@ export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: num
   const countedDays = unionNumbers(mine.countedDays, theirs.countedDays);
   const finishedDays = unionNumbers(mine.finishedDays, theirs.finishedDays);
   const soloDone = unionStrings(mine.soloDone, theirs.soloDone);
+  // --- Daily Jargle (v2.1) ---
+  const jargle = mergeJargle(mine.jargle, theirs.jargle);
   const lastFinished: Record<string, string> = { ...(mine.lastFinished || {}) };
   for (const key of Object.keys(theirs.lastFinished || {})) {
     if (!lastFinished[key] || theirs.lastFinished![key] > lastFinished[key]) {
@@ -355,6 +445,7 @@ export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: num
   const merged: SaveState = {
     v: 1,
     rounds,
+    ...(jargle === undefined ? {} : { jargle }),
     ptpSet,
     ptpTotal: Math.max(mine.ptpTotal, theirs.ptpTotal),
     ptpBest: Math.max(mine.ptpBest, theirs.ptpBest),
@@ -362,6 +453,7 @@ export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: num
     review,
     reviewSeen,
     lessons,
+    wordLessons: Object.keys(wordLessons).length > 0 ? wordLessons : undefined,
     badges,
     missLineIndex: {
       floyd: Math.max(mine.missLineIndex.floyd, theirs.missLineIndex.floyd),
@@ -384,7 +476,11 @@ export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: num
     missLineQueue: mergeMissLineQueue(mine, theirs),
   };
   // XP and scores only go up, so the bigger number from either tab is the right one.
-  return addScores(merged, biggest(mine.xp, theirs.xp), biggest(mine.endlessBest, theirs.endlessBest), biggest(mine.endlessGames, theirs.endlessGames));
+  // Desktop rail (v2.1): keep the later Endless day. YYYY-MM-DD strings sort like dates.
+  const endlessLastDay = mine.endlessLastDay && theirs.endlessLastDay
+    ? (mine.endlessLastDay > theirs.endlessLastDay ? mine.endlessLastDay : theirs.endlessLastDay)
+    : (mine.endlessLastDay || theirs.endlessLastDay);
+  return addScores(merged, biggest(mine.xp, theirs.xp), biggest(mine.endlessBest, theirs.endlessBest), biggest(mine.endlessGames, theirs.endlessGames), endlessLastDay);
 }
 
 function biggest(a: number | undefined, b: number | undefined): number | undefined {

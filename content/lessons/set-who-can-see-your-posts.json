@@ -64,5 +64,40 @@
     }
   ],
   "checked_on": null,
-  "release_day": 2
+  "release_day": 2,
+  "words": [
+    "bank-group-chat",
+    "bank-username",
+    "bank-livestream",
+    "bank-selfie"
+  ],
+  "situations": [
+    {
+      "text": "Privacy settings can help limit who sees your posts, but they do not give you full control.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "The FTC says settings help, but you cannot fully control who sees your profile."
+    },
+    {
+      "text": "Do privacy settings help you limit who sees what you post?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "The FTC says they can limit who sees what you post and who can connect with you."
+    },
+    {
+      "text": "You turn off your privacy settings to save time.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "The FTC says to learn how to turn them on, then use them."
+    }
+  ]
 }

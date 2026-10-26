@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "My computer broke, but I had a ___ of my photos in a second place, so nothing was lost.",
+    "wrong": [
+      "firewall",
+      "malware"
+    ]
+  },
+  "why": "If the first copy is lost or broken, you still have the second.",
+  "short": "Spare copy of your files"
 }

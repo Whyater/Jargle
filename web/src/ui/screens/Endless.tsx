@@ -14,6 +14,7 @@ import { Mascot } from '../components/Mascot';
 import { GameIcon } from '../components/GameIcon';
 import { XpFloat, showToast } from '../components/Toast';
 import { feedback } from '../components/feedback';
+import { playLose, playWin } from '../../platform/audio';
 import { reducedMotion } from '../components/motion';
 import { QuestionView, KIND_NAMES } from '../questions';
 import { ignoreKey } from '../questions/keys';
@@ -157,8 +158,13 @@ export function EndlessScreen() {
       setLine(pickLine(who, 'levelUp', result.run.asked));
       // Play celebrates new levels too; mark this one as shown so it is not cheered twice.
       markSeenLevel(levelNow);
+    } else if (result.correct && result.run.combo >= 2) {
+      // Two or more in a row: the combo chime, one step higher for each answer in the streak.
+      feedback('combo', result.run.combo - 1);
+    } else if (result.correct) {
+      feedback('correct');
     } else {
-      feedback(result.correct ? 'correct' : 'wrong');
+      feedback('heartLost');
     }
 
     if (result.correct && !result.run.over) {
@@ -195,7 +201,10 @@ export function EndlessScreen() {
     };
     setSummary(result);
     setPhase('over');
-    if (result.newBest || result.freshLevel) feedback('levelUp');
+    // One sound for the game over screen: a new level beats a new best, and running out of hearts is gentle.
+    if (result.freshLevel) feedback('levelUp');
+    else if (result.newBest) playWin();
+    else if (finished.over) playLose();
     if (result.levelAfter > result.levelBefore) markSeenLevel(result.levelAfter);
   }
 

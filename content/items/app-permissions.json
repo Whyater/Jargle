@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "your-phone",
   "term": "app permissions",
+  "puzzle": "PERMIT",
   "meaning": "Phone settings that let apps use your location, camera, mic, or contacts.",
   "clues": [
     "They are phone settings that control what an app may use.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "I opened my phone settings and turned off the camera access an app did not need. Those settings are called ___.",
+    "wrong": [
+      "screen time",
+      "Do Not Disturb"
+    ]
+  },
+  "why": "Apps do not need to reach everything, so give them only what they need.",
+  "short": "Settings for what apps can use",
+  "situations": [
+    {
+      "text": "An app has asked to use your contacts, and it does not need them. You turn that access off.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "Turn off access an app does not need. You can change it later."
+    }
+  ]
 }

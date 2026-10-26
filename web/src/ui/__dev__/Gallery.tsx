@@ -7,6 +7,7 @@ import type { GalleryEntry } from './types';
 import { roundGallery } from './fixtures-round';
 import { homeGallery } from './fixtures-home';
 import { listsGallery } from './fixtures-lists';
+import { SoundBoard } from './SoundBoard';
 import { navigate } from '../router';
 import { engine } from '../engine';
 import { getApp, setAppForDev } from '../store';
@@ -69,6 +70,7 @@ export function Gallery() {
   return (
     <div class="sheet">
       <h1 style={{ paddingTop: '1rem' }}>Screen gallery</h1>
+      <SoundBoard />
       {groups.map((group) => (
         <section key={group.title} class="stack-sm" style={{ marginTop: '1.5rem' }}>
           <h2>{group.title}</h2>

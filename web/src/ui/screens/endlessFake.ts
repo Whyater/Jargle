@@ -113,9 +113,19 @@ export function fakeQuestion(
       answer: item.old_tech ? 'Old tech' : "Today's tech",
     };
   }
+  if (kind === 'tiles') {
+    return {
+      ...base,
+      kind,
+      meaning: item.meaning,
+      term: item.term,
+      options: [item.term],
+      answer: item.term,
+    };
+  }
   return {
     ...base,
-    kind,
+    kind: 'clue',
     clues: item.clues.slice(0, 3),
     options: shuffle([item.term].concat(terms), seed),
     answer: item.term,

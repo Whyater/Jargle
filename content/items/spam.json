@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "scams-and-fakes",
   "term": "spam",
+  "puzzle": "SPAM",
   "meaning": "Unwanted messages sent to lots of people at once, by email or text. Most are ads, and some try to trick you.",
   "clues": [
     "You didn't ask for it, and it can show up in large numbers.",
@@ -73,5 +74,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "Most of the ads that fill my inbox are ___, sent to many people at once.",
+    "wrong": [
+      "robocall",
+      "malware"
+    ]
+  },
+  "why": "Some of it tries to trick you, so do not tap its links.",
+  "short": "Unwanted messages sent in bulk",
+  "situations": [
+    {
+      "text": "A text you did not expect has a link. You do not tap it, and you forward the text to 7726.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "This helps your phone company block similar texts."
+    }
+  ]
 }

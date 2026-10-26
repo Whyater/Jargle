@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "money-on-your-phone",
   "term": "Zelle",
+  "puzzle": "ZELLE",
   "meaning": "A phone payment that moves money from your bank account straight into another person's account. Hard to get back, so pay only people you know.",
   "clues": [
     "You use your phone to send money to another person.",
@@ -82,5 +83,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "My bank app has ___, which moves money from my account straight into my sister's account.",
+    "wrong": [
+      "a paper check",
+      "autopay"
+    ]
+  },
+  "why": "Money sent this way is hard to get back, so pay only people you know.",
+  "short": "Phone payment from bank to bank",
+  "situations": [
+    {
+      "text": "A stranger online asks you to pay with Zelle for something you cannot see yet.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "These payments are hard to get back. Pay only people you know."
+    }
+  ]
 }

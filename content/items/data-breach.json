@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "locks-and-keys",
   "term": "data breach",
+  "puzzle": "BREACH",
   "meaning": "Private company records reach the wrong people.",
   "clues": [
     "It concerns private data.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "A store told its customers that their private records had reached the wrong people. That was a ___.",
+    "wrong": [
+      "credit freeze",
+      "data backup"
+    ]
+  },
+  "why": "If a company warns you, change that password and add two-factor login.",
+  "short": "Private records reach wrong people",
+  "situations": [
+    {
+      "text": "A company says your information was exposed. You change that password and turn on two-factor login.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "Changing that password and adding two-factor login protects the account."
+    }
+  ]
 }

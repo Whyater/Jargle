@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "To sign in, I typed my ___, the name I picked for the account.",
+    "wrong": [
+      "FAQ",
+      "selfie"
+    ]
+  },
+  "why": "It is the name you pick to sign in and be known by on a site.",
+  "short": "Name you sign in with"
 }

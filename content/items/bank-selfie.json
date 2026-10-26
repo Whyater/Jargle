@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I held my phone at arm's length and took a ___ of me and my dog.",
+    "wrong": [
+      "meme",
+      "troll"
+    ]
+  },
+  "why": "It is a photo of yourself, so think before you post it.",
+  "short": "Photo you take of yourself"
 }

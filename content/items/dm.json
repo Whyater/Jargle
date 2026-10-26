@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "internet-talk",
   "term": "DM",
+  "puzzle": "DIRECT",
   "meaning": "A private message that only the person you send it to can see, sent on a social media site.",
   "clues": [
     "It is a way to send a message through a social media app.",
@@ -75,5 +76,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "I sent my cousin a ___ so only she could see it, not everyone who follows me.",
+    "wrong": [
+      "post",
+      "comment"
+    ]
+  },
+  "why": "It is private, but check the name before you send.",
+  "short": "Private message on social media",
+  "situations": [
+    {
+      "text": "A DM asks you for a code or money. Is it fine to send it right away?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "If a message asks for a code or money, pause and check with the person another way first."
+    }
+  ]
 }

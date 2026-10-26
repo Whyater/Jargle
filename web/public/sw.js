@@ -42,6 +42,22 @@
     }).catch(function () { return null; });
   }
 
+  // Lazy chunks (like the Jargle word list) are not linked from index.html, so the build lists
+  // every JS and CSS file in precache.json. Older builds have no list, which is fine.
+  function cachePrecacheFiles(cache) {
+    return fetch('./precache.json').then(function (response) {
+      if (!response || !response.ok) throw new Error('precache');
+      return response.json();
+    }).then(function (files) {
+      if (!Array.isArray(files)) return null;
+      return Promise.all(files.filter(function (file) {
+        return typeof file === 'string';
+      }).map(function (file) {
+        return cacheOne(cache, file);
+      }));
+    }).catch(function () { return null; });
+  }
+
   self.addEventListener('install', function (event) {
     event.waitUntil(caches.open(cacheName).then(function (cache) {
       return fetch('./index.html').then(function (response) {
@@ -67,7 +83,9 @@
             return Promise.all(unique.map(function (url) { return cacheOne(cache, url); })).then(function () {
               // Fonts are linked from the CSS, not the HTML, so read each stylesheet for its url(...) files.
               var sheets = unique.filter(function (url) { return /\.css$/.test(url); });
-              return Promise.all(sheets.map(function (sheet) { return cacheFontsOf(cache, sheet); }));
+              return Promise.all(sheets.map(function (sheet) { return cacheFontsOf(cache, sheet); })).then(function () {
+                return cachePrecacheFiles(cache);
+              });
             });
           });
         });

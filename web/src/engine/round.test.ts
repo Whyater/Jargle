@@ -419,6 +419,17 @@ describe("Clue Ladder round", () => {
   it("counts today finish", () => {
     expect(solve(begin()).state.countedDays).toEqual([1]);
   });
+  it("pays practice XP for a bonus round after Jargle is finished", () => {
+    const state = newState();
+    state.jargle = {
+      "1": { guesses: ["WORD"], status: "won", started_on: D1, finished_on: D1 },
+    };
+    const r = solve(begin(state));
+    expect(r.xpGained).toBe(22);
+  });
+  it("pays daily XP when Jargle has not been played", () => {
+    expect(solve(begin()).xpGained).toBe(50);
+  });
   it("counts grace finish", () => {
     let s = begin();
     s = tap(s, { type: "select", term: ANSWER }).state;

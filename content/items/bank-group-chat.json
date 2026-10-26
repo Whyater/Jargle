@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I sent one message to my whole family in our ___, and everyone saw it.",
+    "wrong": [
+      "selfie",
+      "username"
+    ]
+  },
+  "why": "Everyone in it sees every message, so think about who is in it.",
+  "short": "Shared chat for three or more"
 }

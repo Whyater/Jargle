@@ -3,12 +3,13 @@
   "kind": "term",
   "topic": "your-phone",
   "term": "Bluetooth",
+  "puzzle": "BLUE",
   "meaning": "A short-range wireless link. It connects your phone to nearby things like earbuds, speakers, or a car, with no cable.",
   "clues": [
     "It lets your phone work with nearby earbuds, a speaker, or a car, with no cable.",
     "It is a short-range link, so the two things need to be fairly close.",
     "You pair two devices once, and after that they can connect on their own.",
-    "Its name is the nickname of a king who ruled Denmark long ago.",
+    "The first half of its name is a color. The name comes from the nickname of a king who ruled Denmark long ago.",
     "It has nine letters and starts with B."
   ],
   "assumes": [
@@ -84,5 +85,25 @@
   ],
   "checked_on": null,
   "difficulty": 1,
-  "decisive_clue": 1
+  "decisive_clue": 1,
+  "blank": {
+    "sentence": "I paired my phone with my earbuds over ___, so there is no cord, but they have to be close.",
+    "wrong": [
+      "GPS",
+      "mobile data"
+    ]
+  },
+  "why": "It links nearby gadgets with no cord. Turn it off when unused to save battery.",
+  "short": "Short-range wireless link, no cable",
+  "situations": [
+    {
+      "text": "Your phone is at home and your earbuds are across town. Can they connect by Bluetooth?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "It is a short-range link, so the two things need to be fairly close."
+    }
+  ]
 }

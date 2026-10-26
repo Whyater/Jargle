@@ -15,8 +15,9 @@ export function AboutScreen() {
             <Mascot who="bud" size={72} pose="happy" />
           </div>
           <p>
-            Jargle is a daily word game for tech words. You guess the word from clues and four answer cards. A wrong
-            guess flips over and shows what that word means, so a miss still teaches you something.
+            Jargle is a daily word game for tech words. Guess today's word in six tries on a letter grid, and every miss
+            unlocks a new clue. Then learn what it means in a short lesson, practice in Endless, and keep your streak
+            going.
           </p>
           <p class="about-maker">Made by Abyan.</p>
         </div>

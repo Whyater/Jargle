@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A tiny ___ inside my phone links it to my phone company and helps hold my number.",
+    "wrong": [
+      "app store",
+      "battery saver"
+    ]
+  },
+  "why": "It links your phone to your phone company and helps hold your number.",
+  "short": "Tiny card linking phone to company"
 }

@@ -20,21 +20,37 @@ import { GetJargleScreen } from './ui/screens/GetJargle';
 import { NotFoundScreen } from './ui/screens/NotFound';
 import { MeScreen } from './ui/screens/Me';
 import { EndlessScreen } from './ui/screens/Endless';
+// --- Daily Jargle (v2.1) ---
+import { JargleScreen } from './ui/screens/Jargle';
 import { TabBar } from './ui/components/TabBar';
 import { ToastHost } from './ui/components/Toast';
+import { UpdateBanner } from './ui/components/UpdateBanner';
+import { SideNav } from './ui/components/SideNav';
+import { RightRail } from './ui/components/RightRail';
+import { useWide } from './ui/components/useWide';
+import { setLayoutClasses } from './ui/layoutClasses';
 
 export default function App() {
   const route = useRoute();
   const tab = tabForRoute(route.name);
-  // The body class reserves room at the bottom of the page for the fixed tab bar.
-  useEffect(() => {
-    document.body.classList.toggle('has-tabs', tab !== null);
-  }, [tab]);
+  const wide = useWide();
+  // Set the layout classes during render, not in an effect: a screen's own effects run before
+  // App's, and a game screen measures its pinned bar at the root font size focus mode sets.
+  setLayoutClasses(tab !== null);
+  // On wide screens the tab bar becomes a side nav, and a rail of today's progress sits on the right.
+  const desktop = wide && tab !== null;
   return (
     <>
-      <ScreenGuard key={route.name + ':' + (route.param || '')} />
-      {tab ? <TabBar active={tab} /> : null}
+      <div class={desktop ? 'shell shell-wide' : 'shell'}>
+        {desktop && tab ? <SideNav active={tab} /> : null}
+        <div class="shell-main">
+          <ScreenGuard key={route.name + ':' + (route.param || '')} />
+        </div>
+        {desktop ? <RightRail screen={route.name} /> : null}
+      </div>
+      {tab && !wide ? <TabBar active={tab} /> : null}
       <ToastHost />
+      <UpdateBanner />
     </>
   );
 }
@@ -103,6 +119,9 @@ function Routes() {
       return <MeScreen />;
     case 'endless':
       return <EndlessScreen />;
+    // --- Daily Jargle (v2.1) ---
+    case 'jargle':
+      return <JargleScreen />;
     case 'how':
       return <HowToPlayScreen />;
     case 'code':

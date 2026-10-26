@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 3,
   "decisive_clue": 3,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I typed 'a red boat on a lake' and the ___ made a brand-new picture.",
+    "wrong": [
+      "translation app",
+      "text to speech"
+    ]
+  },
+  "why": "It turns words you type into a brand-new picture.",
+  "short": "Tool that makes pictures from words"
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "locks-and-keys",
   "term": "passkey",
+  "puzzle": "PASSKEY",
   "meaning": "A way to sign in with your phone's fingerprint, face, or screen lock PIN instead of a password.",
   "clues": [
     "It is a way to prove who you are when you sign in to an account.",
@@ -63,5 +64,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "I signed in without a password. My phone's fingerprint scan unlocked my ___.",
+    "wrong": [
+      "backup code",
+      "security key"
+    ]
+  },
+  "why": "It lets you skip typing a password by using your phone's own unlock.",
+  "short": "Sign in with fingerprint, not password",
+  "situations": [
+    {
+      "text": "A site offers a passkey. Should you read its help page before you set one up?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "Its help page shows the steps. Keep your screen lock private too."
+    }
+  ]
 }

@@ -14,6 +14,7 @@ import { TOPIC_ORDER } from '../../engine/types';
 import type { LessonStatus } from '../../engine/api';
 import { currentLessonIndex, pathOffset, topicName } from './listLogic';
 import '../../styles/screens.css';
+import '../lesson/learn-map.css';
 
 export function LearnScreen() {
   const app = useApp();
@@ -56,7 +57,9 @@ export function LearnScreen() {
         </li>,
       );
     }
-    rows.push(<PathStop key={status.lesson.id} status={status} index={i} current={i === current} />);
+    const record = app.save.lessons[status.lesson.id];
+    const stars = status.done && record && record.stars ? record.stars : 0;
+    rows.push(<PathStop key={status.lesson.id} status={status} index={i} current={i === current} stars={stars} />);
   }
 
   return (
@@ -99,7 +102,7 @@ export function LearnScreen() {
 }
 
 /** One round stop on the lesson path: done, up next, open, or locked. */
-function PathStop({ status, index, current }: { status: LessonStatus; index: number; current: boolean }) {
+function PathStop({ status, index, current, stars }: { status: LessonStatus; index: number; current: boolean; stars: number }) {
   const lesson = status.lesson;
   const offset = pathOffset(index);
   const name = lesson.number + '. ' + lesson.title;
@@ -120,6 +123,7 @@ function PathStop({ status, index, current }: { status: LessonStatus; index: num
 
   let label = name;
   if (status.done) label += '. Done';
+  if (stars) label += ', ' + stars + ' of 3 stars';
   if (current) label += '. Up next';
 
   return (
@@ -149,6 +153,8 @@ function PathStop({ status, index, current }: { status: LessonStatus; index: num
             {icon}
           </button>
         )}
+        {/* Done lessons show their best stars, like a level on a game map. */}
+        {status.done && stars ? <PathStars stars={stars} /> : null}
         <span class="path-name" aria-hidden="true">
           {name}
         </span>
@@ -160,5 +166,22 @@ function PathStop({ status, index, current }: { status: LessonStatus; index: num
         </div>
       ) : null}
     </li>
+  );
+}
+
+/** Three small stars under a done lesson. Lessons finished before stars existed show no stars. */
+function PathStars({ stars }: { stars: number }) {
+  const icons = [];
+  for (let i = 1; i <= 3; i++) {
+    icons.push(
+      <span key={i} class={i <= stars ? 'path-star is-on' : 'path-star'}>
+        <GameIcon name="star" size={20} />
+      </span>,
+    );
+  }
+  return (
+    <span class="path-stars" aria-hidden="true">
+      {icons}
+    </span>
   );
 }

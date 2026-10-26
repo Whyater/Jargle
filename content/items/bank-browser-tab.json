@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I opened a new ___ at the top of my browser so I could switch between two pages.",
+    "wrong": [
+      "download",
+      "modem"
+    ]
+  },
+  "why": "Each one holds a different page, so you can switch between them.",
+  "short": "Label holding one open web page"
 }

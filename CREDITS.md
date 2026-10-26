@@ -45,6 +45,8 @@ Floyd and Bud are 3D characters modeled in [Blender](https://www.blender.org/) b
 
 Every word in `content/` lists the pages it was drafted from under `sources`. Those pages belong to their publishers, such as government agencies, dictionaries, museums, library guides and device makers. Jargle links to them and uses its own wording.
 
+The guess list includes SCOWL word lists by Kevin Atkinson and contributors. Copyright 2000-2018 by Kevin Atkinson. SCOWL grants free permission to use, copy, modify, distribute and sell the lists, scripts, output and documentation, provided the copyright notice appears in all copies and both notices appear in supporting documentation. It is provided as is, without warranty. The full notice is in [content/SCOWL-COPYRIGHT.txt](content/SCOWL-COPYRIGHT.txt).
+
 ## License
 
 Jargle's own code and content are under the [MIT License](LICENSE). The libraries and fonts above keep their own licenses.

@@ -94,6 +94,7 @@ export async function pageToday(page: Page): Promise<string> {
 // Just the parts of content/bundle.json the tests read.
 export interface BundleItem {
   term: string;
+  puzzle?: string;
   meaning: string;
   old_tech?: boolean;
   clues: string[];
@@ -104,6 +105,7 @@ export interface Bundle {
   items: Record<string, BundleItem>;
   schedule: { days: { date: string; term: string }[] };
   lessons: unknown[];
+  commonWords?: string[];
 }
 
 /** Downloads the same content bundle the app plays with, so tests can know the right answers. */

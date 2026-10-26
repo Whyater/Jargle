@@ -68,5 +68,40 @@
     }
   ],
   "checked_on": null,
-  "release_day": 2
+  "release_day": 2,
+  "words": [
+    "bank-spoofing",
+    "bank-robocall",
+    "bank-identity-theft",
+    "bank-scareware"
+  ],
+  "situations": [
+    {
+      "text": "A text says your bank saw a problem and has a link. You open your bank's official app instead.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "The FTC says not to click links in unexpected messages."
+    },
+    {
+      "text": "A real company will ask for your account details by text.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "The FTC says real companies will not ask for account information by text."
+    },
+    {
+      "text": "You are worried about a text from your bank. Should you call the number in the text?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "Use the number on your statement, not a number in the message."
+    }
+  ]
 }

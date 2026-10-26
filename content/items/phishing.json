@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "scams-and-fakes",
   "term": "phishing",
+  "puzzle": "PHISH",
   "meaning": "A message that pretends to be from a company you trust. It tries to get you to click a link and share private details.",
   "clues": [
     "Someone is trying to get your private details or your money.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "A text said my bank account had a problem and told me to click a link. That was ___.",
+    "wrong": [
+      "ransomware",
+      "identity theft"
+    ]
+  },
+  "why": "It tricks people into sharing private details, so check before you click.",
+  "short": "Fake message that steals your details",
+  "situations": [
+    {
+      "text": "A text says there is a problem with your bank account. You ignore the link and call the bank on a number you already know.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "Calling a number you know is real is the safe way to check."
+    }
+  ]
 }

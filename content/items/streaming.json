@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "how-the-internet-works",
   "term": "streaming",
+  "puzzle": "STREAM",
   "meaning": "Watching or hearing a show online as it plays, without saving it all first.",
   "clues": [
     "It lets you watch a show or hear music through the internet.",
@@ -67,5 +68,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "The movie started playing right away, before the whole file arrived. That is ___.",
+    "wrong": [
+      "downloading",
+      "satellite radio"
+    ]
+  },
+  "why": "It lets you enjoy shows and music without saving the whole file first.",
+  "short": "Watching or hearing while it plays",
+  "situations": [
+    {
+      "text": "With streaming, you must wait for the whole movie to download before it starts.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "It plays small pieces as they arrive, so you do not wait for the whole file."
+    }
+  ]
 }

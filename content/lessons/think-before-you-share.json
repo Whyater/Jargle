@@ -63,5 +63,40 @@
       "url": "https://www.fdic.gov/consumer-resource-center/2025-10/protect-your-finances-and-identity-online"
     }
   ],
-  "checked_on": null
+  "checked_on": null,
+  "words": [
+    "bank-reply-all",
+    "bank-meme",
+    "bank-clickbait",
+    "bank-troll"
+  ],
+  "situations": [
+    {
+      "text": "If you delete a post, no one can have saved or shared it.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "The FTC says a deleted post could be saved, shared, and live online."
+    },
+    {
+      "text": "You post your home address and birthday on your public profile.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "The FDIC says to keep details like these out of online profiles and posts."
+    },
+    {
+      "text": "Should you check your privacy settings before you post?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "The FTC says to use privacy settings and stop and think before you post."
+    }
+  ]
 }

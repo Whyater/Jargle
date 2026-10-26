@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A person kept posting rude comments on purpose just to start an argument. People call that person a ___.",
+    "wrong": [
+      "influencer",
+      "selfie"
+    ]
+  },
+  "why": "They post rude or upsetting things just to get a reaction.",
+  "short": "Poster who tries to upset people"
 }

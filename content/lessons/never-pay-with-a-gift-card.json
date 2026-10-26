@@ -59,5 +59,40 @@
       "url": "https://consumer.ftc.gov/articles/gift-card-scams"
     }
   ],
-  "checked_on": null
+  "checked_on": null,
+  "words": [
+    "bank-prize-scam",
+    "bank-romance-scam",
+    "bank-tech-support-scam",
+    "bank-catfishing"
+  ],
+  "situations": [
+    {
+      "text": "A caller says you owe a bill and must pay it by buying a gift card.",
+      "options": [
+        "Scam",
+        "Safe"
+      ],
+      "answer": "Scam",
+      "why": "The FTC says no real business or agency will tell you to pay with a gift card."
+    },
+    {
+      "text": "You buy a gift card to give your friend for her birthday.",
+      "options": [
+        "Scam",
+        "Safe"
+      ],
+      "answer": "Safe",
+      "why": "A gift card is for a gift, for people you know."
+    },
+    {
+      "text": "You gave a card number to someone who demanded payment. Should you keep the receipt and tell the card company?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "The FTC says to keep the receipt and report it to the card company and the FTC."
+    }
+  ]
 }

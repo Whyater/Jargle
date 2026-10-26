@@ -66,6 +66,36 @@ describe('service worker', () => {
     expect(fetchMock.mock.calls.filter(([url]) => url === './index.html')).toHaveLength(1);
   });
 
+  it('caches lazy chunks listed in precache.json during install', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url === './index.html') return response('<html></html>');
+      if (url === './precache.json') return response('["assets/jargleWords-test.js"]');
+      if (url === 'assets/jargleWords-test.js') return response('lazy chunk');
+      return response('');
+    });
+    const { handlers, caches } = makeWorker(fetchMock);
+    let installPromise: Promise<unknown> | undefined;
+    handlers.install({ waitUntil: (promise: Promise<unknown>) => { installPromise = promise; } });
+
+    await installPromise;
+
+    const cache = await caches.open('jargle-test');
+    expect(await cache.match('assets/jargleWords-test.js')).toBeDefined();
+  });
+
+  it('continues install when precache.json is missing', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url === './index.html') return response('<html></html>');
+      if (url === './precache.json') return response('', 404);
+      return response('');
+    });
+    const { handlers } = makeWorker(fetchMock);
+    let installPromise: Promise<unknown> | undefined;
+    handlers.install({ waitUntil: (promise: Promise<unknown>) => { installPromise = promise; } });
+
+    await expect(installPromise).resolves.toBeUndefined();
+  });
+
   it('updates the index cache after a successful navigation', async () => {
     const fetchMock = vi.fn(async () => response('<html>new</html>'));
     const { handlers, caches } = makeWorker(fetchMock);

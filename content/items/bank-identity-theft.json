@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "Someone used my name and account numbers without asking and opened accounts as if they were me. That is ___.",
+    "wrong": [
+      "scareware",
+      "catfishing"
+    ]
+  },
+  "why": "Someone may open accounts or buy things as if they were you.",
+  "short": "Someone uses your name or numbers"
 }

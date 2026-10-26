@@ -63,5 +63,40 @@
       "url": "https://www.fcc.gov/more-consumers-adopt-payment-apps-scammers-follow"
     }
   ],
-  "checked_on": null
+  "checked_on": null,
+  "words": [
+    "bank-tap-to-pay",
+    "bank-pin",
+    "bank-mobile-check-deposit",
+    "bank-direct-deposit"
+  ],
+  "situations": [
+    {
+      "text": "A stranger asks you to send money through a payment app.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "The FCC says to never send money to someone you do not know."
+    },
+    {
+      "text": "Before you tap send, should you double-check the recipient name?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "The FTC says this helps make sure the payment goes to the right person."
+    },
+    {
+      "text": "Money sent through a payment app is easy to get back.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "The FTC says once you send it, it is hard to get back."
+    }
+  ]
 }

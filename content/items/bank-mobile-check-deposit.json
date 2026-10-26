@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I took a photo of a paper check with my phone camera and used ___ to put it in my account.",
+    "wrong": [
+      "tap to pay",
+      "autopay"
+    ]
+  },
+  "why": "It lets you deposit a check without a trip to the bank.",
+  "short": "Deposit a check with phone photo"
 }

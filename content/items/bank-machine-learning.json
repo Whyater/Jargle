@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 3,
   "decisive_clue": 3,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "The computer did not just follow rules. It used ___ to learn from many examples.",
+    "wrong": [
+      "text to speech",
+      "smart home"
+    ]
+  },
+  "why": "Computers learn from examples, not only from written rules.",
+  "short": "Computers learn from many examples"
 }

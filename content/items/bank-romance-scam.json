@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "He acted like a loving partner online. After I trusted him, he asked me for money. That was a ___.",
+    "wrong": [
+      "prize scam",
+      "tech support scam"
+    ]
+  },
+  "why": "The crook builds trust first, then asks you for money.",
+  "short": "Fake sweetheart who asks for money"
 }

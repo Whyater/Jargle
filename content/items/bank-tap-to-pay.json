@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "At checkout I held my phone near the card reader to pay, with no swiping. That is ___.",
+    "wrong": [
+      "autopay",
+      "direct deposit"
+    ]
+  },
+  "why": "You pay by holding your phone, watch, or card near a reader.",
+  "short": "Pay by holding phone near reader"
 }

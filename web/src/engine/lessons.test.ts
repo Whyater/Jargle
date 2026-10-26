@@ -18,7 +18,9 @@ describe("lessons", function () {
     expect(statuses[0].lesson.topic).toBe("locks-and-keys");
     expect(statuses[0].lesson.number).toBe(1);
     expect(statuses[1].lesson.number).toBe(2);
-    expect(statuses[4].lesson.topic).toBe("talking-computers");
+    expect(statuses[4].lesson.topic).toBe("scams-and-fakes");
+    // Chatbot lessons come last now.
+    expect(statuses[statuses.length - 1].lesson.topic).toBe("talking-computers");
   });
 
   it("locks an earlier lesson until it is finished", function () {

@@ -63,5 +63,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "My electric bill is paid from my bank on a set date without me doing anything, thanks to ___.",
+    "wrong": [
+      "direct deposit",
+      "tap to pay"
+    ]
+  },
+  "why": "It pays for you each time, so keep an eye on your account.",
+  "short": "Bill pays itself on schedule"
 }

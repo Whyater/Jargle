@@ -230,6 +230,10 @@ export function isFirstDailyDone(save: SaveState): boolean {
     const round = save.rounds[key];
     if (round.mode === 'daily' && round.counted_day !== undefined) return true;
   }
+  // --- Daily Jargle (v2.1) --- a finished letter grid game counts as the first daily too.
+  for (const day of Object.keys(save.jargle || {})) {
+    if (save.jargle![day].status !== 'playing') return true;
+  }
   return false;
 }
 

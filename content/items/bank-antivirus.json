@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I installed ___ to scan my computer for harmful programs and warn me about bad files.",
+    "wrong": [
+      "firewall",
+      "backup"
+    ]
+  },
+  "why": "It scans for harmful programs and can warn you about bad files.",
+  "short": "Scans for and removes bad programs"
 }

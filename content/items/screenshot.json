@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "your-phone",
   "term": "screenshot",
+  "puzzle": "SHOT",
   "meaning": "A picture of exactly what is showing on your phone's screen. You can save it or send it to someone.",
   "clues": [
     "It has to do with what you see on your phone's screen.",
@@ -76,5 +77,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "I pressed two buttons to make my ___, a still picture of the confirmation page.",
+    "wrong": [
+      "screen recording",
+      "wallpaper"
+    ]
+  },
+  "why": "It lets you keep a confirmation or share exactly what you see.",
+  "short": "A picture of your phone screen",
+  "situations": [
+    {
+      "text": "A screenshot is one still picture of what is showing on your phone screen.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "It is a still picture, not a video. A screen recording is the video."
+    }
+  ]
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "how-the-internet-works",
   "term": "cookies",
+  "puzzle": "COOKIES",
   "meaning": "Small files a website saves in your browser to remember you, such as your login or cart. Some track you across sites.",
   "clues": [
     "Your browser saves small bits of data about the sites you visit.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "The site kept me signed in because it saved some small ___ in my browser.",
+    "wrong": [
+      "browsing history",
+      "autofill"
+    ]
+  },
+  "why": "Some remember your cart, and some track you across sites.",
+  "short": "Small files a site saves",
+  "situations": [
+    {
+      "text": "Clearing your browser's cookies may sign you out of some sites.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "Some sites need them for a cart or sign-in. Read the choice first."
+    }
+  ]
 }

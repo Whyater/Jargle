@@ -60,5 +60,49 @@
     }
   ],
   "checked_on": null,
-  "release_day": 2
+  "release_day": 2,
+  "words": [
+    "bank-autopay",
+    "bank-in-app-purchase",
+    "bank-buy-now-pay-later",
+    "bank-direct-deposit"
+  ],
+  "situations": [
+    {
+      "text": "You see a charge you did not make, so you wait for your next statement to decide.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "The CFPB says to contact your bank or card provider at once."
+    },
+    {
+      "text": "You see an odd charge. Should you call the number on your card or statement?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "The CFPB says to use the number on your card or statement."
+    },
+    {
+      "text": "You check your account activity often and read your statements.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "A short check can catch a problem early."
+    },
+    {
+      "text": "You called about an unknown charge and wrote down the dates of your calls.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "The CFPB says to keep copies of letters and write down the dates you call."
+    }
+  ]
 }

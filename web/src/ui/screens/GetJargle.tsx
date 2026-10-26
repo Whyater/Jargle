@@ -54,7 +54,7 @@ export function GetJargleScreen() {
             </Button>
           ) : null}
           <LinkButton block gameIcon="download" href={androidApkUrl} external>
-            Download the Android app
+            Download for Android
           </LinkButton>
           <p class="small">Open the file after it downloads, then allow the install.</p>
         </section>

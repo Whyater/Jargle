@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "The photo was saved onto my phone with one ___ from the website.",
+    "wrong": [
+      "router",
+      "pop-up"
+    ]
+  },
+  "why": "It puts a copy of a file on your own device.",
+  "short": "Copy a file onto your device"
 }

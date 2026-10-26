@@ -3,11 +3,12 @@
   "kind": "term",
   "topic": "locks-and-keys",
   "term": "VPN",
+  "puzzle": "PRIVATE",
   "meaning": "Sends your online traffic through a private link. A good one scrambles it, so people on the same Wi-Fi cannot read it.",
   "clues": [
     "It is a tool that helps protect your online activity.",
     "It can help protect you when you use public Wi-Fi.",
-    "It usually sends your connection through a private, scrambled path.",
+    "It usually sends your connection through a hidden, scrambled path.",
     "It cannot hide you fully or stop every bad website.",
     "Its short name has three letters."
   ],
@@ -75,5 +76,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "On public Wi-Fi, I used a trusted ___ to scramble my connection so others could not read it.",
+    "wrong": [
+      "firewall",
+      "antivirus software"
+    ]
+  },
+  "why": "It can help on public Wi-Fi, but it cannot stop fake websites.",
+  "short": "Private, scrambled path online",
+  "situations": [
+    {
+      "text": "A trusted VPN can send your connection through a private, scrambled path on public Wi-Fi.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "It can help on public Wi-Fi, though it cannot stop every bad website."
+    }
+  ]
 }

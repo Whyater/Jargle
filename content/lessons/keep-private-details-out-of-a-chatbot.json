@@ -64,5 +64,40 @@
     }
   ],
   "checked_on": null,
-  "release_day": 2
+  "release_day": 2,
+  "words": [
+    "bank-training-data",
+    "bank-image-generator",
+    "bank-translation-app",
+    "bank-speech-to-text"
+  ],
+  "situations": [
+    {
+      "text": "You would not post your home address for everyone to see. Should you type it into an AI tool?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
+      "why": "CISA says if you would not post it, do not share it with an AI tool."
+    },
+    {
+      "text": "You ask an AI tool for a simple soup recipe.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "A recipe has no private details in it."
+    },
+    {
+      "text": "An answer from an AI tool never needs a second check.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "CISA says not to rely only on AI answers. Check important ones another way."
+    }
+  ]
 }

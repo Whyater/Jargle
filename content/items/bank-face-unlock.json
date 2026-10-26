@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "My phone opened as soon as I looked at it, because I use ___.",
+    "wrong": [
+      "PIN",
+      "security question"
+    ]
+  },
+  "why": "The phone checks that your face matches the one it saved.",
+  "short": "Phone opens when it sees you"
 }

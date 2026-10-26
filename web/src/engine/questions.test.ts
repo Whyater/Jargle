@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildContent } from './__fixtures__/content';
-import { buildQuestion, isCorrect } from './questions';
+import { buildQuestion, canSpell, isCorrect } from './questions';
 
 const content = buildContent();
 const item = content.items['two-factor-login'];
@@ -31,10 +31,18 @@ describe('buildQuestion', () => {
     expect(oldnew.options).toEqual(['Old tech', "Today's tech"]);
     expect(oldnew.answer).toBe("Today's tech");
 
+    const tiles = buildQuestion(content, 'claude', 'tiles', 'e');
+    if (tiles.kind !== 'tiles') throw new Error('expected a tiles question');
+    expect(tiles.meaning).toBe(content.items.claude.meaning);
+    expect(tiles.term).toBe('Claude');
+    expect(tiles.options).toEqual(['Claude']);
+    expect(tiles.answer).toBe('Claude');
+
     for (const question of [meaning, name, clue, oldnew]) {
       expect(question.options).toContain(question.answer);
       expect(question.why).toBe(item.term + ': ' + item.meaning);
     }
+    expect(tiles.why).toBe('Claude: ' + content.items.claude.meaning);
   });
 
   it('is deterministic for a seed and shuffles options across seeds', () => {
@@ -70,6 +78,30 @@ describe('buildQuestion', () => {
     expect(question.answer).toBe('Old tech');
     expect(isCorrect(question, question.answer)).toBe(true);
     expect(isCorrect(question, 'wrong')).toBe(false);
+  });
+
+  it('checks tile answers by letters and keeps other kinds exact', () => {
+    const tiles = buildQuestion(content, 'claude', 'tiles', 'letters');
+    expect(isCorrect(tiles, 'CLAUDE')).toBe(true);
+    expect(isCorrect(tiles, '')).toBe(false);
+    expect(isCorrect(tiles, '   ')).toBe(false);
+    const wifi = buildQuestion(content, 'wi-fi', 'tiles', 'punctuation');
+    expect(isCorrect(wifi, 'WI FI')).toBe(true);
+    expect(isCorrect(wifi, 'Wi-Fi')).toBe(true);
+    expect(isCorrect(tiles, 'clad')).toBe(false);
+    const name = buildQuestion(content, item.id, 'name', 'exact');
+    expect(isCorrect(name, item.term.toUpperCase())).toBe(false);
+    expect(isCorrect(name, item.term)).toBe(true);
+  });
+
+  it('accepts only short single words for tiles', () => {
+    expect(canSpell('cache')).toBe(true);
+    expect(canSpell('Wi-Fi')).toBe(false);
+    expect(canSpell('two factor')).toBe(false);
+    expect(canSpell('ab')).toBe(false);
+    expect(canSpell('abcdefghi')).toBe(true);
+    expect(canSpell('abcdefghij')).toBe(false);
+    expect(canSpell('2fa')).toBe(false);
   });
 
   it('throws for an unknown item', () => {

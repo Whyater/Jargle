@@ -11,7 +11,7 @@ const DAILY_TOPICS = TOPICS.slice(0, 7);
 const DEMO_ORDER = ['two-factor-login', 'wi-fi', 'screenshot', 'emoji', 'phishing', 'deepfake', 'the-cloud', 'bluetooth', 'zelle', 'hashtag', 'spam', 'claude'];
 const PRODUCTS = ['venmo', 'cash app', 'paypal', 'siri', 'alexa', 'facebook', 'instagram', 'whatsapp', 'google', 'iphone'];
 const KEEP_OUT = ['addictive', 'get smarter', 'brain training', 'inoculate', 'scammer', 'teachers know less ai than students', 'national winner', 'first ever', 'no one else'];
-const CODE_KEYS = new Set(['id', 'kind', 'topic', 'checked_on', 'speaker', 'tone', 'mascot']);
+const CODE_KEYS = new Set(['id', 'kind', 'topic', 'checked_on', 'speaker', 'tone', 'mascot', 'words']);
 const URL_KEYS = new Set(['url', 'source_urls', 'link_urls']);
 
 // Read one JSON file and record parse errors.
@@ -64,6 +64,10 @@ function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function wordCount(value) {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
 // Check the URL format allowed in content.
 function isValidUrl(value) {
   return typeof value === 'string' && value.startsWith('https://');
@@ -102,10 +106,39 @@ function checkStringArray(value, file, errors, label) {
   if (!Array.isArray(value) || value.some((entry) => typeof entry !== 'string')) addError(errors, file, `${label} must be an array of strings`);
 }
 
+// Check one situation card.
+function checkSituation(value, file, errors, label) {
+  if (!checkKeys(value, ['text', 'options', 'answer', 'why'], errors, file, label)) return;
+  if (!isNonEmptyString(value.text) || wordCount(value.text) > 35) addError(errors, file, `${label}.text must be non-empty and have 35 words or fewer`);
+  if (!Array.isArray(value.options) || value.options.length !== 2 || value.options.some((option) => !isNonEmptyString(option)) || new Set(value.options.map((option) => option.toLowerCase())).size !== 2) {
+    addError(errors, file, `${label}.options must have exactly 2 distinct non-empty strings`);
+  } else if (!value.options.includes(value.answer)) {
+    addError(errors, file, `${label}.answer must be one of options`);
+  }
+  if (!isNonEmptyString(value.why) || wordCount(value.why) > 25) addError(errors, file, `${label}.why must be non-empty and have 25 words or fewer`);
+}
+
+// Check optional item lesson fields.
+function checkItemLessonFields(item, file, errors) {
+  if (item.blank !== undefined) {
+    if (!checkKeys(item.blank, ['sentence', 'wrong'], errors, file, 'blank')) return;
+    if (!isNonEmptyString(item.blank.sentence) || (item.blank.sentence.match(/___/g) || []).length !== 1 || item.blank.sentence.startsWith('___')) addError(errors, file, 'blank.sentence must be non-empty, contain ___ exactly once, and not start with ___');
+    if (!Array.isArray(item.blank.wrong) || ![2, 3].includes(item.blank.wrong.length) || item.blank.wrong.some((entry) => !isNonEmptyString(entry)) || new Set(item.blank.wrong.map((entry) => entry.toLowerCase())).size !== item.blank.wrong.length) addError(errors, file, 'blank.wrong must have 2 or 3 distinct non-empty strings');
+    else if (item.term && item.blank.wrong.some((entry) => entry.toLowerCase() === item.term.toLowerCase())) addError(errors, file, 'blank.wrong must not contain the item term');
+    if (isNonEmptyString(item.blank.sentence) && item.term && isWholeWord(item.blank.sentence.replace('___', ''), item.term)) addError(errors, file, 'blank.sentence must not contain the item term');
+  }
+  if (item.why !== undefined && (!isNonEmptyString(item.why) || wordCount(item.why) > 20)) addError(errors, file, 'why must be non-empty and have 20 words or fewer');
+  if (item.short !== undefined && (!isNonEmptyString(item.short) || wordCount(item.short) > 6 || (item.term && isWholeWord(item.short, item.term)))) addError(errors, file, 'short must be non-empty, have 6 words or fewer, and not contain the item term');
+  if (item.situations !== undefined) {
+    if (!Array.isArray(item.situations) || item.situations.length < 1 || item.situations.length > 4) addError(errors, file, 'situations must have 1 to 4 entries');
+    else for (let i = 0; i < item.situations.length; i += 1) checkSituation(item.situations[i], file, errors, `situations[${i}]`);
+  }
+}
+
 // Check the shape and fields of one term item.
 function checkItem(item, file, errors) {
-  const keys = ['id', 'kind', 'topic', 'term', 'meaning', 'clues', 'assumes', 'decoys', 'exchange', 'old_tech', 'sources', 'checked_on', 'difficulty', 'decisive_clue', 'release_day', 'bank'];
-  if (!checkKeys(item, keys, errors, file, 'item', ['release_day', 'bank'])) return;
+  const keys = ['id', 'kind', 'topic', 'term', 'meaning', 'clues', 'assumes', 'decoys', 'exchange', 'old_tech', 'sources', 'checked_on', 'difficulty', 'decisive_clue', 'release_day', 'bank', 'blank', 'why', 'short', 'situations', 'puzzle'];
+  if (!checkKeys(item, keys, errors, file, 'item', ['release_day', 'bank', 'blank', 'why', 'short', 'situations', 'puzzle'])) return;
   if (item.kind !== 'term') addError(errors, file, 'kind must be term');
   if (!TOPICS.includes(item.topic)) addError(errors, file, 'topic is invalid');
   if (!isNonEmptyString(item.term)) addError(errors, file, 'term must be non-empty');
@@ -146,12 +179,14 @@ function checkItem(item, file, errors) {
   // Bank words are extra Endless words. They are out from day 1, so they never get a release day.
   if (item.bank !== undefined && item.bank !== true) addError(errors, file, 'bank must be true when present');
   if (item.bank && item.release_day !== undefined) addError(errors, file, 'bank items must not have release_day');
+  checkItemLessonFields(item, file, errors);
+  if (item.puzzle !== undefined && (typeof item.puzzle !== 'string' || !/^[A-Z]{4,7}$/.test(item.puzzle))) addError(errors, file, 'puzzle must be 4 to 7 capital letters');
 }
 
 // Check the shape and fields of one lesson.
 function checkLesson(lesson, file, errors) {
-  const keys = ['id', 'topic', 'number', 'title', 'cards', 'checks', 'takeaway', 'sources', 'checked_on', 'release_day'];
-  if (!checkKeys(lesson, keys, errors, file, 'lesson', ['release_day'])) return;
+  const keys = ['id', 'topic', 'number', 'title', 'cards', 'checks', 'takeaway', 'sources', 'checked_on', 'release_day', 'words', 'situations'];
+  if (!checkKeys(lesson, keys, errors, file, 'lesson', ['release_day', 'words', 'situations'])) return;
   if (!DAILY_TOPICS.includes(lesson.topic)) addError(errors, file, 'topic must be a daily topic');
   if (!Number.isInteger(lesson.number) || lesson.number <= 0) addError(errors, file, 'number must be a positive integer');
   if (!isNonEmptyString(lesson.title) || !isNonEmptyString(lesson.takeaway)) addError(errors, file, 'title and takeaway must be non-empty');
@@ -169,6 +204,10 @@ function checkLesson(lesson, file, errors) {
   checkSources(lesson.sources, file, errors);
   checkCheckedOn(lesson.checked_on, file, errors);
   if (lesson.release_day !== undefined && (!Number.isInteger(lesson.release_day) || lesson.release_day <= 0)) addError(errors, file, 'release_day must be a positive integer');
+  if (lesson.situations !== undefined) {
+    if (!Array.isArray(lesson.situations) || lesson.situations.length < 2 || lesson.situations.length > 4) addError(errors, file, 'situations must have 2 to 4 entries');
+    else for (let i = 0; i < lesson.situations.length; i += 1) checkSituation(lesson.situations[i], file, errors, `situations[${i}]`);
+  }
 }
 
 // Check lesson questions and their answer length limits.
@@ -295,6 +334,12 @@ function checkItemText(item, file, errors, warnings) {
   for (const entry of strings) checkBannedText(entry.text, entry.field, file, errors, warnings);
   for (const entry of protectedFields) if (typeof entry.text === 'string') checkReading(entry.text, entry.field, file, warnings);
   if (Array.isArray(item.exchange)) for (let i = 0; i < item.exchange.length; i += 1) if (typeof item.exchange[i]?.text === 'string') checkReading(item.exchange[i].text, `exchange[${i}].text`, file, warnings);
+  if (typeof item.blank?.sentence === 'string') checkReading(item.blank.sentence, 'blank.sentence', file, warnings);
+  if (typeof item.why === 'string') checkReading(item.why, 'why', file, warnings);
+  if (Array.isArray(item.situations)) for (let i = 0; i < item.situations.length; i += 1) {
+    if (typeof item.situations[i]?.text === 'string') checkReading(item.situations[i].text, `situations[${i}].text`, file, warnings);
+    if (typeof item.situations[i]?.why === 'string') checkReading(item.situations[i].why, `situations[${i}].why`, file, warnings);
+  }
 }
 
 // Check schedule dates, terms, difficulty, and product rules.
@@ -323,6 +368,7 @@ function checkSchedule(schedule, items, file, errors, warnings) {
     if (day.rerun && !seen.has(day.term)) addError(errors, file, `${day.term} rerun has no earlier non-rerun`);
     if (typeof day.rerun !== 'boolean') addError(errors, file, `${field}.rerun must be boolean`);
     const item = items.get(day.term);
+    if (item && item.puzzle === undefined) addError(errors, file, `${day.term} is missing puzzle`);
     if (item && isValidDate(day.date)) {
       // Weeks count from launch day: day 1 of each week is easy, days 2 to 4 medium, days 5 to 7 hard.
       const dayOfWeek = (dayNumber - 1) % 7;
@@ -395,7 +441,7 @@ function checkCommonAndMiss(common, miss, items, file, errors) {
 }
 
 // Check that every bank word is new: no other item may use the same term.
-function checkBankTerms(items, errors) {
+function checkBankTerms(items, errors, rootContentDir = contentDir) {
   const owners = new Map();
   for (const item of items.values()) {
     if (typeof item.term !== 'string') continue;
@@ -406,13 +452,13 @@ function checkBankTerms(items, errors) {
   for (const list of owners.values()) {
     if (list.length < 2) continue;
     for (const item of list) {
-      if (item.bank) addError(errors, path.join(contentDir, 'items', `${item.id}.json`), `bank term "${item.term}" is already used by another item`);
+      if (item.bank) addError(errors, path.join(rootContentDir, 'items', `${item.id}.json`), `bank term "${item.term}" is already used by another item`);
     }
   }
 }
 
 // Check early terms against one release order.
-function checkEarlyWords(items, lessons, common, errors, order, label) {
+function checkEarlyWords(items, lessons, common, errors, order, label, rootContentDir = contentDir) {
   const dayMap = new Map();
   for (let i = 0; i < order.length; i += 1) dayMap.set(order[i], i + 1);
   const release = new Map();
@@ -425,11 +471,11 @@ function checkEarlyWords(items, lessons, common, errors, order, label) {
   const commonWords = new Set((Array.isArray(common) ? common : []).map((entry) => typeof entry === 'string' ? entry.toLowerCase() : ''));
   for (const id of order) {
     const item = items.get(id);
-    if (item && commonWords.has(item.term.toLowerCase())) addError(errors, path.join(contentDir, 'schedule.json'), `daily term ${item.term} is a common word`);
+    if (item && commonWords.has(item.term.toLowerCase())) addError(errors, path.join(rootContentDir, 'schedule.json'), `daily term ${item.term} is a common word`);
   }
   const files = [];
-  for (const [id, item] of items.entries()) files.push({ id, value: item, file: path.join(contentDir, 'items', `${id}.json`), own: id });
-  for (const lesson of lessons) files.push({ id: lesson.id, value: lesson, file: path.join(contentDir, 'lessons', `${lesson.id}.json`), own: null });
+  for (const [id, item] of items.entries()) files.push({ id, value: item, file: path.join(rootContentDir, 'items', `${id}.json`), own: id });
+  for (const lesson of lessons) files.push({ id: lesson.id, value: lesson, file: path.join(rootContentDir, 'lessons', `${lesson.id}.json`), own: null });
   for (const entry of files) {
     const strings = textValues(entry.value);
     for (const id of order) {
@@ -460,14 +506,44 @@ function checkEarlyWords(items, lessons, common, errors, order, label) {
   }
 }
 
+// Check lesson words against topics and release days.
+function checkLessonWords(lessons, items, schedule, errors, rootContentDir) {
+  const dayMap = new Map();
+  const realOrder = (schedule.days || []).filter((day) => !day.rerun).map((day) => day.term);
+  for (let i = 0; i < realOrder.length; i += 1) dayMap.set(realOrder[i], i + 1);
+  const release = new Map();
+  for (const item of items.values()) release.set(item.id, dayMap.get(item.id) || item.release_day || 1);
+  for (const lesson of lessons) {
+    if (lesson.words === undefined) continue;
+    const file = path.join(rootContentDir, 'lessons', `${lesson.id}.json`);
+    if (!Array.isArray(lesson.words) || lesson.words.length !== 4 || new Set(lesson.words).size !== lesson.words.length) {
+      addError(errors, file, 'words must have 4 distinct item ids');
+      continue;
+    }
+    const shortsSeen = [];
+    for (const id of lesson.words) {
+      const item = items.get(id);
+      if (!item) { addError(errors, file, `words references missing item ${id}`); continue; }
+      if (item.topic !== lesson.topic) addError(errors, file, `word ${id} has a different topic`);
+      if (!item.blank) addError(errors, file, `word ${id} must have a blank`);
+      // Match pairs needs every meaning tile to be different.
+      const short = (item.short || item.meaning || '').trim().toLowerCase();
+      if (shortsSeen.indexOf(short) !== -1) addError(errors, file, `word ${id} has the same short meaning as another word in this lesson`);
+      shortsSeen.push(short);
+      const lessonDay = lesson.release_day || lesson.number;
+      if ((release.get(id) || 1) > lessonDay) addError(errors, file, `word ${id} is released after lesson day ${lessonDay}`);
+    }
+  }
+}
+
 // Check every content file and return parsed content plus messages.
-export function checkContent({ strict = false } = {}) {
+export function checkContent({ strict = false, contentDir: rootContentDir = contentDir } = {}) {
   const errors = [];
   const warnings = [];
   const items = new Map();
   const lessons = [];
-  const itemDir = path.join(contentDir, 'items');
-  const lessonDir = path.join(contentDir, 'lessons');
+  const itemDir = path.join(rootContentDir, 'items');
+  const lessonDir = path.join(rootContentDir, 'lessons');
   const itemFiles = fs.existsSync(itemDir) ? fs.readdirSync(itemDir).filter((name) => name.endsWith('.json')).sort() : [];
   for (const name of itemFiles) {
     const file = path.join(itemDir, name);
@@ -493,37 +569,39 @@ export function checkContent({ strict = false } = {}) {
       if (Array.isArray(lesson.checks[i].options)) for (let j = 0; j < lesson.checks[i].options.length; j += 1) readingFields.push([`checks[${i}].options[${j}]`, lesson.checks[i].options[j]]);
     }
     readingFields.push(['takeaway', lesson.takeaway]);
+    if (Array.isArray(lesson.situations)) for (let i = 0; i < lesson.situations.length; i += 1) readingFields.push([`situations[${i}].text`, lesson.situations[i].text], [`situations[${i}].why`, lesson.situations[i].why]);
     for (const [field, text] of readingFields) if (typeof text === 'string') checkReading(text, field, file, warnings);
     lessons.push(lesson);
   }
-  const scheduleFile = path.join(contentDir, 'schedule.json');
+  const scheduleFile = path.join(rootContentDir, 'schedule.json');
   const schedule = readJson(scheduleFile, errors) || { version: 1, days: [] };
   const scheduleTerms = checkSchedule(schedule, items, scheduleFile, errors, warnings);
-  const oldFile = path.join(contentDir, 'old_tech_order.json');
+  const oldFile = path.join(rootContentDir, 'old_tech_order.json');
   const oldTech = readJson(oldFile, errors) || [];
   checkOldTech(oldTech, items, oldFile, errors);
-  const ptpFile = path.join(contentDir, 'ptp_extras.json');
+  const ptpFile = path.join(rootContentDir, 'ptp_extras.json');
   const ptpExtras = readJson(ptpFile, errors) || [];
   checkPtp(ptpExtras, items, scheduleTerms, ptpFile, errors);
-  const missFile = path.join(contentDir, 'miss_lines.json');
+  const missFile = path.join(rootContentDir, 'miss_lines.json');
   const missLines = readJson(missFile, errors) || {};
-  const commonFile = path.join(contentDir, 'common_words.json');
+  const commonFile = path.join(rootContentDir, 'common_words.json');
   const commonWords = readJson(commonFile, errors) || [];
   checkCommonAndMiss(commonWords, missLines, items, commonFile, errors);
   const realOrder = schedule.days?.filter((day) => !day.rerun).map((day) => day.term) || [];
-  checkBankTerms(items, errors);
+  checkLessonWords(lessons, items, schedule, errors, rootContentDir);
+  checkBankTerms(items, errors, rootContentDir);
   // Bank items count as out on day 1 here, so they can't name a daily word before its day.
-  checkEarlyWords(items, lessons, commonWords, errors, realOrder, 'real');
-  checkEarlyWords(items, lessons, commonWords, errors, DEMO_ORDER, 'demo');
+  checkEarlyWords(items, lessons, commonWords, errors, realOrder, 'real', rootContentDir);
+  checkEarlyWords(items, lessons, commonWords, errors, DEMO_ORDER, 'demo', rootContentDir);
   const referenced = new Set([...scheduleTerms.keys(), ...oldTech, ...ptpExtras]);
   for (const item of items.values()) if (item.bank) referenced.add(item.id);
   const unreferenced = [...items.keys()].filter((id) => !referenced.has(id));
   if (unreferenced.length) addWarning(warnings, itemDir, `${unreferenced.length} item file(s) are not referenced`);
   const uncheckedFiles = [];
-  for (const item of items.values()) if (item.checked_on === null) uncheckedFiles.push(path.join(contentDir, 'items', `${item.id}.json`));
-  for (const lesson of lessons) if (lesson.checked_on === null) uncheckedFiles.push(path.join(contentDir, 'lessons', `${lesson.id}.json`));
+  for (const item of items.values()) if (item.checked_on === null) uncheckedFiles.push(path.join(rootContentDir, 'items', `${item.id}.json`));
+  for (const lesson of lessons) if (lesson.checked_on === null) uncheckedFiles.push(path.join(rootContentDir, 'lessons', `${lesson.id}.json`));
   if (strict) for (const file of uncheckedFiles) addError(errors, file, 'checked_on is null (strict mode)');
-  else if (uncheckedFiles.length) addWarning(warnings, contentDir, `${uncheckedFiles.length} unchecked file(s)`);
+  else if (uncheckedFiles.length) addWarning(warnings, rootContentDir, `${uncheckedFiles.length} unchecked file(s)`);
   const content = { items, lessons, oldTech, ptpExtras, schedule, missLines, commonWords };
   return { errors, warnings, content };
 }

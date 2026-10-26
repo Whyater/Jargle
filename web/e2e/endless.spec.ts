@@ -43,7 +43,7 @@ async function clickOption(page: Page, option: string): Promise<void> {
 }
 
 // The visible kind labels that start every question card.
-const KIND_LABELS = ['Meaning Match', 'Name It', 'True or False', 'Old or New', 'Clue Climb'];
+const KIND_LABELS = ['Meaning Match', 'Name It', 'True or False', 'Old or New', 'Clue Climb', 'Spell it'];
 
 // Reads the question kind from the visible text at the top of the prompt card.
 async function readKind(page: Page): Promise<string> {
@@ -62,7 +62,8 @@ async function questionSignature(page: Page): Promise<string> {
   try {
     const kind = await readKind(page);
     const options = await page.locator('[data-option]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-option')));
-    return kind + ' | ' + options.join(' / ');
+    const prompt = kind === 'Spell it' ? await page.locator('#en-prompt .lt-prompt-text').innerText() : '';
+    return kind + ' | ' + options.join(' / ') + ' | ' + prompt;
   } catch {
     // The card can be missing for a moment while the next question is drawn.
     return '';
@@ -74,6 +75,11 @@ async function currentItem(page: Page, items: BundleItem[]): Promise<BundleItem>
   const card = page.locator('#en-prompt');
   const kind = await readKind(page);
   const termLocator = card.locator('.q-term, .q-term-inline').first();
+  if (kind === 'Spell it') {
+    const clue = await card.locator('.lt-prompt-text').innerText();
+    const found = items.find((item) => item.meaning === clue || item.term === clue);
+    if (found) return found;
+  }
   if (await termLocator.count() > 0) {
     const term = await termLocator.innerText();
     const found = items.find((item) => item.term === term);
@@ -98,7 +104,7 @@ async function rightAnswer(page: Page, items: BundleItem[]): Promise<string> {
   const kind = await readKind(page);
   const item = await currentItem(page, items);
   if (kind === 'Meaning Match') return item.meaning;
-  if (kind === 'Name It' || kind === 'Clue Climb') return item.term;
+  if (kind === 'Name It' || kind === 'Clue Climb' || kind === 'Spell it') return item.term;
   if (kind === 'Old or New') return item.old_tech ? 'Old tech' : "Today's tech";
   if (kind === 'True or False') {
     const statement = await page.locator('#en-prompt .q-statement').innerText();
@@ -138,7 +144,15 @@ async function answerRightAndWait(page: Page, items: BundleItem[]): Promise<void
   if (before === '') {
     throw new Error('no question was on screen to answer');
   }
-  await clickOption(page, await rightAnswer(page, items));
+  const answer = await rightAnswer(page, items);
+  if (await readKind(page) === 'Spell it') {
+    for (const letter of answer.replace(/[^A-Za-z]/g, '').toUpperCase()) {
+      await page.getByRole('button', { name: 'Letter ' + letter, exact: true }).first().click();
+    }
+    await expect(page.getByText('You got it!', { exact: true })).toBeVisible();
+  } else {
+    await clickOption(page, answer);
+  }
   await waitForNewQuestion(page, before);
 }
 
@@ -149,6 +163,29 @@ async function waitForNewQuestion(page: Page, before: string): Promise<void> {
     // An empty signature means the card is between questions, which is not "new" yet.
     return now !== '' && now !== before;
   }, { timeout: 5000 }).toBe(true);
+}
+
+async function answerWrong(page: Page, items: BundleItem[]): Promise<void> {
+  const kind = await readKind(page);
+  if (kind !== 'Spell it') {
+    await clickOption(page, await wrongAnswer(page, await rightAnswer(page, items)));
+    return;
+  }
+  const answer = (await rightAnswer(page, items)).replace(/[^A-Za-z]/g, '').toUpperCase();
+  const letters = answer.split('');
+  if (letters.length > 1) {
+    const first = letters.shift() as string;
+    letters.push(first);
+  }
+  for (const letter of letters) {
+    await page.getByRole('button', { name: 'Letter ' + letter, exact: true }).first().click();
+  }
+  await expect(page.getByText('Not quite. One more try!', { exact: true })).toBeVisible();
+  await page.waitForTimeout(700);
+  for (const letter of letters) {
+    await page.getByRole('button', { name: 'Letter ' + letter, exact: true }).first().click();
+  }
+  await expect(page.getByRole('button', { name: /^(Next|See my score)$/ })).toBeVisible();
 }
 
 test.describe('Endless', () => {
@@ -162,11 +199,11 @@ test.describe('Endless', () => {
     const items = allItems(await loadBundle(page) as RuntimeBundle);
     await startEndless(page);
     const seen = new Set<string>();
-    for (let i = 0; i < 40 && seen.size < 5; i += 1) {
+    for (let i = 0; i < 60 && seen.size < 6; i += 1) {
       seen.add(await readKind(page));
       await answerRightAndWait(page, items);
     }
-    expect([...seen].sort(), `kinds seen: ${[...seen].join(', ')}`).toEqual(['Clue Climb', 'Meaning Match', 'Name It', 'Old or New', 'True or False']);
+    expect([...seen].sort(), `kinds seen: ${[...seen].join(', ')}`).toEqual(['Clue Climb', 'Meaning Match', 'Name It', 'Old or New', 'Spell it', 'True or False']);
   });
 
   test('combo reaches x2, then a wrong answer resets it and costs a heart', async ({ page }) => {
@@ -179,7 +216,7 @@ test.describe('Endless', () => {
     await expect(page.getByLabel('Combo 3, points times 2', { exact: true })).toBeVisible();
     const item = await currentItem(page, items);
     const questionBefore = await questionSignature(page);
-    await clickOption(page, await wrongAnswer(page, await rightAnswer(page, items)));
+    await answerWrong(page, items);
     await expect(page.getByLabel('Combo 0, points times 1', { exact: true })).toBeVisible();
     await expect(page.getByRole('img', { name: '2 hearts left', exact: true })).toBeVisible();
     // The why line under the answers names the word and its meaning.
@@ -209,7 +246,7 @@ test.describe('Endless', () => {
     await startEndless(page);
     await answerRightAndWait(page, items);
     for (let i = 0; i < 3; i += 1) {
-      await clickOption(page, await wrongAnswer(page, await rightAnswer(page, items)));
+      await answerWrong(page, items);
       if (i === 0) {
         await expect(page.getByRole('img', { name: '2 hearts left', exact: true })).toBeVisible();
       }
@@ -234,7 +271,7 @@ test.describe('Endless', () => {
     await startEndless(page);
     await answerRightAndWait(page, items);
     for (let i = 0; i < 3; i += 1) {
-      await clickOption(page, await wrongAnswer(page, await rightAnswer(page, items)));
+      await answerWrong(page, items);
       const button = i === 2 ? 'See my score' : 'Next';
       await page.getByRole('button', { name: button, exact: true }).click();
     }

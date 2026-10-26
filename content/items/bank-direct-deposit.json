@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "My pay goes straight into my bank account by computer, so I need no paper check. That is ___.",
+    "wrong": [
+      "autopay",
+      "tap to pay"
+    ]
+  },
+  "why": "Your pay or benefits arrive in your account with no paper check.",
+  "short": "Paycheck lands in your bank account"
 }

@@ -50,6 +50,11 @@ function bubbleLine(page: Page, line: string): Locator {
 
 const LARGE_CLASS = /(^|\s)ts-large(\s|$)/;
 
+/** One shown clue in the round's clue list (the list is the steady copy; Bud's bubble only reacts). */
+function clueLine(page: Page, clue: string): Locator {
+  return page.locator('.clue-stack .clue-text').filter({ hasText: clue });
+}
+
 function barsLeft(page: Page, bars: number): Locator {
   return page.getByRole('img', { name: bars + ' of 6 bars left', exact: true });
 }
@@ -70,6 +75,16 @@ function nextClueButton(page: Page): Locator {
 async function openDaily(page: Page): Promise<void> {
   await goToHash(page, '#/');
   await wordCard(page).getByRole('button', { name: /^(Play|Continue)$/ }).click();
+  await expect(page).toHaveURL(/#\/jargle$/);
+  const { item } = await todaysWord(page);
+  const answer = (item.puzzle || item.term.replace(/[^A-Za-z]/g, '')).toUpperCase();
+  for (const letter of answer) {
+    // A key is named by its letter, then its color once used, so Enter never matches.
+    await page.getByRole('group', { name: 'Keyboard' }).getByRole('button', { name: new RegExp('^' + letter + '(,|$)') }).click();
+  }
+  await page.getByRole('group', { name: 'Keyboard' }).getByRole('button', { name: 'Enter', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 2 })).toBeVisible();
+  await page.getByRole('button', { name: 'Bonus clue round', exact: true }).click();
   await checkButton(page).waitFor({ state: 'visible' });
 }
 
@@ -151,7 +166,7 @@ test.describe('Play home', () => {
     await expect(word.getByRole('heading', { name: 'Word of the Day' })).toBeVisible();
     // The number must end there: No. 2 must not pass for No. 20.
     await expect(word).toContainText(new RegExp('No\\. ' + dayNumber + '(?!\\d)'));
-    await expect(word).toContainText("Guess today's tech word from a few clues.");
+    await expect(word).toContainText("Guess today's tech word in 6 tries.");
     await expect(word.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
 
     const endless = page.getByRole('region', { name: 'Endless' });
@@ -177,17 +192,12 @@ test.describe('Play home', () => {
     const { item } = await todaysWord(page);
     await wordCard(page).getByRole('button', { name: 'Play', exact: true }).click();
 
-    await expect(page).toHaveURL(/#\/play\/d(%3A|:)\d+$/);
-    await expect(checkButton(page)).toBeVisible();
-    await expect(page.getByRole('heading', { name: "Today's word", level: 1 })).toBeVisible();
-    await expect(barsLeft(page, 6)).toBeVisible();
-    // One clue to start, and the four answer cards (the answer is one of them).
-    await expect(page.getByText('1 of ' + item.clues.length, { exact: true })).toBeVisible();
-    await expect(page.getByText(item.clues[0], { exact: true })).toBeVisible();
-    await expect(card(page, item.term)).toBeVisible();
-    for (const decoy of item.decoys) {
-      await expect(card(page, decoy.term)).toBeVisible();
-    }
+    await expect(page).toHaveURL(/#\/jargle$/);
+    await expect(page.getByRole('heading', { name: 'Daily Jargle', level: 1 })).toBeVisible();
+    // MascotSays keeps a hidden copy for screen readers beside the visible line.
+    await expect(page.locator('section.jg-clue p.bubble > span[aria-hidden="true"]')).toContainText(item.clues[0]);
+    await expect(page.getByRole('group', { name: /^Guess \d of 6$/ })).toHaveCount(6);
+    await expect(page.getByRole('group', { name: 'Keyboard' })).toBeVisible();
   });
 });
 
@@ -217,9 +227,9 @@ test.describe('daily round', () => {
     await expect(page.getByText('You got it!', { exact: true })).toBeVisible();
     await expect(page.getByText('You learned ' + item.term + '. Solved with 6 bars left.', { exact: true })).toBeVisible();
     await expect(barsLeft(page, 6)).toBeVisible();
-    // A solved daily with 6 bars is worth 20 + 5 * 6 XP.
+    // A bonus clue round with 6 bars uses the practice rate: 10 + 2 * 6 XP.
     // The pill is the steady one. A floating copy next to it is hidden from screen readers and fades.
-    await expect(page.locator('.win-xp .pill')).toHaveText(/^\s*\+50 XP\s*$/);
+    await expect(page.locator('.win-xp .pill')).toHaveText(/^\s*\+22 XP\s*$/);
 
     // Share step, then the done step.
     await continueToShare(page);
@@ -235,30 +245,30 @@ test.describe('daily round', () => {
     // Back on Play the card shows the solved state.
     await goToHash(page, '#/');
     const word = wordCard(page);
-    await expect(word).toContainText('Solved with 6 bars left. Nice!');
-    await expect(word).not.toContainText('Your result');
+    await expect(word).toContainText('Got it in 1 of 6. Nice!');
     await expect(word).toContainText('Next word in');
     await expect(word.getByRole('button', { name: /^(Play|Continue)$/ })).toHaveCount(0);
     await expect(word.getByRole('button', { name: "See today's word", exact: true })).toBeVisible();
 
     // Play's progress bar shows the new level, and it must survive a full reload (the save used to drop XP).
-    const progress = page.getByRole('link', { name: /^Your progress: level 2, \d+ day streak, 20 of 50 XP$/ });
+    const progress = page.getByRole('link', { name: /^Your progress: level 3, \d+ day streak, 12 of 70 XP$/ });
     await expect(progress).toBeVisible();
-    await expect(page.getByText('20 / 50 XP', { exact: true })).toBeVisible();
+    await expect(page.getByText('12 / 70 XP', { exact: true })).toBeVisible();
     await page.reload();
     await waitForReady(page);
     await expect(progress).toBeVisible();
-    await expect(page.getByText('20 / 50 XP', { exact: true })).toBeVisible();
+    await expect(page.getByText('12 / 70 XP', { exact: true })).toBeVisible();
 
-    // The 50 XP shows on Me: level 1 needs 30, so the player is now 20 XP into level 2 (50 XP needed there).
+    // Jargle gives 70 XP and the solved bonus clue round adds 22 practice XP.
     await goToHash(page, '#/me');
-    await expect(page.getByText('Level 2', { exact: true })).toBeVisible();
-    await expect(page.getByText('30 XP to level 3', { exact: true })).toBeVisible();
+    await expect(page.getByText('Level 3', { exact: true })).toBeVisible();
+    await expect(page.getByText('58 XP to level 4', { exact: true })).toBeVisible();
     await expect(page.getByText('Level 1', { exact: true })).toHaveCount(0);
   });
 
   test('a miss costs bars, the round goes on, and solving still works', async ({ page }) => {
     test.setTimeout(60000);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await openFresh(page);
     const { item } = await todaysWord(page);
     const wrong = item.decoys[0];
@@ -266,14 +276,14 @@ test.describe('daily round', () => {
 
     // Buy one clue (6 bars become 5).
     await nextClueButton(page).click();
-    await expect(page.getByText(item.clues[1], { exact: true })).toBeVisible();
+    await expect(clueLine(page, item.clues[1])).toBeVisible();
     await expect(page.getByText('2 of ' + item.clues.length, { exact: true })).toBeVisible();
     await expect(barsLeft(page, 5)).toBeVisible();
 
-    // A wrong card, checked with Enter (a wrong guess costs 3 bars).
+    // A wrong card costs 3 bars. Reduced motion keeps the flipped card ready to read.
     await card(page, wrong.term).click();
     await expect(card(page, wrong.term)).toHaveAttribute('aria-pressed', 'true');
-    await page.keyboard.press('Enter');
+    await checkButton(page).click();
     await expect(page.getByText('Not this one', { exact: true })).toHaveCount(1);
     await expect(page.getByText(wrong.meaning, { exact: true })).toBeVisible();
     await expect(barsLeft(page, 2)).toBeVisible();
@@ -291,7 +301,7 @@ test.describe('daily round', () => {
     await expect(barsLeft(page, 2)).toBeVisible();
 
     await goToHash(page, '#/');
-    await expect(wordCard(page)).toContainText('Solved with 2 bars left. Nice!');
+    await expect(wordCard(page)).toContainText('Got it in 1 of 6. Nice!');
   });
 
   test('running out of bars shows the answer and counts as learned', async ({ page }) => {
@@ -335,7 +345,7 @@ test.describe('daily round', () => {
 
     // Play says the word was learned, not solved.
     await goToHash(page, '#/');
-    await expect(wordCard(page)).toContainText("Done! You learned today's word.");
+    await expect(wordCard(page)).toContainText('Got it in 1 of 6. Nice!');
     await expect(wordCard(page)).toContainText('Next word in');
     await expect(wordCard(page).getByRole('button', { name: /^(Play|Continue)$/ })).toHaveCount(0);
   });
@@ -372,14 +382,15 @@ test.describe('daily round', () => {
     await waitForReady(page);
     await expect(checkButton(page)).toBeVisible();
     await expect(page.getByText('2 of ' + item.clues.length, { exact: true })).toBeVisible();
-    await expect(page.getByText(item.clues[0], { exact: true })).toBeVisible();
-    await expect(page.getByText(item.clues[1], { exact: true })).toBeVisible();
+    await expect(clueLine(page, item.clues[0])).toBeVisible();
+    await expect(clueLine(page, item.clues[1])).toBeVisible();
     await expect(barsLeft(page, 5)).toBeVisible();
     await expect(card(page, item.decoys[2].term)).toHaveAttribute('aria-pressed', 'true');
 
-    // Play offers to pick up where the player left off.
+    // Today's Jargle is already done, so Play shows the finished card, not the bonus round.
     await goToHash(page, '#/');
-    await expect(wordCard(page).getByRole('button', { name: 'Continue', exact: true })).toBeVisible();
+    await waitForReady(page);
+    await expect(wordCard(page).getByRole('button', { name: "See today's word", exact: true })).toBeVisible();
   });
 });
 

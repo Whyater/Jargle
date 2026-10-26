@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I arranged my app icons in rows and folders on my phone's ___.",
+    "wrong": [
+      "lock screen",
+      "do not disturb"
+    ]
+  },
+  "why": "It is where your apps wait, so you can arrange them your way.",
+  "short": "Main phone screen with app icons"
 }

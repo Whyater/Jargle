@@ -69,5 +69,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A funny picture that people copy, change, and pass along online is a ___.",
+    "wrong": [
+      "selfie",
+      "FAQ"
+    ]
+  },
+  "why": "People copy and pass them along, so a post can travel far.",
+  "short": "Funny picture people copy and share"
 }

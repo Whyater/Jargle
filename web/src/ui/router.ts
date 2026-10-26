@@ -23,7 +23,9 @@ type RouteName =
   | 'get'
   | 'gallery'
   | 'me'
-  | 'endless';
+  | 'endless'
+  // --- Daily Jargle (v2.1) ---
+  | 'jargle';
 
 const simplePaths: Record<string, RouteName> = {
   review: 'review',
@@ -40,6 +42,8 @@ const simplePaths: Record<string, RouteName> = {
   gallery: 'gallery',
   me: 'me',
   endless: 'endless',
+  // --- Daily Jargle (v2.1) ---
+  jargle: 'jargle',
 };
 
 const listeners = new Set<() => void>();

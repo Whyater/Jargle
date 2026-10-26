@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "talking-computers",
   "term": "voice assistant",
+  "puzzle": "VOICE",
   "meaning": "Software you talk to out loud that answers questions or does tasks on a phone or a home speaker.",
   "clues": [
     "You can ask it about almost anything out loud, like the weather, and it answers you.",
@@ -75,5 +76,25 @@
   ],
   "checked_on": null,
   "difficulty": 1,
-  "decisive_clue": 1
+  "decisive_clue": 1,
+  "blank": {
+    "sentence": "I asked my ___ to set a timer, and it answered out loud.",
+    "wrong": [
+      "screen reader",
+      "dictation"
+    ]
+  },
+  "why": "It listens for a wake word, and you can change its settings.",
+  "short": "Software you talk to for help",
+  "situations": [
+    {
+      "text": "A voice assistant only works on a speaker at home, never on a phone.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "False",
+      "why": "It can run on a phone too, not just on a speaker at home."
+    }
+  ]
 }

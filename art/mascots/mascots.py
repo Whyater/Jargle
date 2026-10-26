@@ -720,21 +720,176 @@ def render_icon_art(path, frame_height, size=1024):
 
 
 def render_icons(out_dir):
-    # The app icon is Floyd waving. "full" fills the square; "safe" keeps him inside
-    # the middle two thirds, for icons the system crops to a circle or squircle.
-    tight = 3.55
-    render_icon_art(os.path.join(out_dir, 'art-full.png'), tight)
-    render_icon_art(os.path.join(out_dir, 'art-safe.png'), tight / 0.7)
-    render_icon_art(os.path.join(out_dir, 'art-fg.png'), tight / 0.62)
+    # The app icon is now a letter tile with the mascots (see the block below).
+    render_tile_icons(out_dir, ICON_VARIANT)
+
+
+# ---------- the app icon: a letter tile with Floyd and Bud ----------
+#
+# Everything the icon needs that the sprites do not. The mascots come from
+# build_floyd and build_bud unchanged; they are only scaled and placed here.
+
+ICON_VARIANT = 'floyd'
+TILE_GREEN = '#3BC46B'
+TILE_SUNNY = '#FFC83D'
+TILE_CREAM = '#FFF6E6'
+TILE_INK = '#2B2340'
+ICON_TOP = '#8466FF'      # the grape background, a little lighter at the top
+ICON_BOTTOM = '#6644EC'   # and a little deeper at the bottom
+
+
+def rounded_box(name, size, center, color, radius):
+    # A chunky tile: a box with every edge rounded off.
+    mesh = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    for v in bm.verts:
+        v.co.x *= size[0]
+        v.co.y *= size[1]
+        v.co.z *= size[2]
+    bm.to_mesh(mesh)
+    bm.free()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.location = center
+    obj.data.materials.append(make_material(name, color, rough=0.3, coat=0.8))
+    mod = obj.modifiers.new('bevel', 'BEVEL')
+    mod.width = radius
+    mod.segments = 10
+    mod.limit_method = 'NONE'
+    for poly in obj.data.polygons:
+        poly.use_smooth = True
+    return obj
+
+
+def letter(char, center_x, center_z, front_y, height, color):
+    # A bold rounded letter standing out of the tile face toward the camera.
+    curve = bpy.data.curves.new('letter', 'FONT')
+    curve.body = char
+    curve.size = height
+    curve.extrude = 0.05
+    curve.bevel_depth = 0.025
+    curve.bevel_resolution = 4
+    font_path = '/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf'
+    if os.path.exists(font_path):
+        curve.font = bpy.data.fonts.load(font_path)
+    obj = bpy.data.objects.new('letter', curve)
+    bpy.context.collection.objects.link(obj)
+    obj.rotation_euler = (math.pi / 2, 0, 0)
+    obj.data.materials.append(make_material('letter', color, rough=0.35, coat=0.6))
+    # center the glyph by its real outline, not the font's line box
+    bpy.context.view_layer.update()
+    xs = [c[0] for c in obj.bound_box]
+    ys = [c[1] for c in obj.bound_box]
+    obj.location = (center_x - (min(xs) + max(xs)) / 2, front_y - 0.075,
+                    center_z - (min(ys) + max(ys)) / 2)
+    return obj
+
+
+def letter_tile(char, x, z, size, tile_color, ink, y=0.0):
+    # A tile standing on its bottom edge, with its letter; z is the bottom.
+    depth = size * 0.3
+    rounded_box('tile_' + char, (size, depth, size), (x, y, z + size / 2), tile_color, size * 0.17)
+    letter(char, x, z + size / 2, y - depth / 2, size * 0.78, ink)
+
+
+def place_mascot(root, x, z, scale, turn, lean=0.0, y=-0.4, mirror=False):
+    # Shrink a mascot and stand its feet on z.
+    root.scale = (-scale if mirror else scale, scale, scale)
+    root.location = (x, y, z - GROUND * scale)
+    root.rotation_euler = (0, math.radians(lean), math.radians(turn))
+    shadow = add_ground_shadow(1.1 * scale)
+    shadow.location = (x, y - 0.05, z + 0.002)
+    shadow.scale.y = 0.5 * scale
+    return root
+
+
+def build_tile_scene(variant):
+    # Returns the height of the content, so the camera can frame it.
+    if variant == 'duo':
+        letter_tile('J', 0.0, 0.0, 2.2, TILE_GREEN, TILE_CREAM)
+        tile_shadow = add_ground_shadow(1.5)
+        tile_shadow.location.z = 0.002
+        place_mascot(build_floyd('wave'), -1.42, 0.0, 0.5, 22, mirror=True)
+        place_mascot(build_bud('wave'), 1.42, 0.0, 0.5, -22)
+        return 0.0, 2.2
+    if variant == 'floyd':
+        # placed so the tile, Floyd's waving hand and the shadows are centered
+        letter_tile('J', -0.625, 0.0, 2.3, TILE_GREEN, TILE_CREAM)
+        tile_shadow = add_ground_shadow(1.55)
+        tile_shadow.location = (-0.625, -0.05, 0.002)
+        place_mascot(build_floyd('wave'), 0.875, 0.0, 0.58, -18)
+        return 0.0, 2.3
+    if variant == 'pair':
+        letter_tile('G', 0.62, 0.55, 1.75, TILE_SUNNY, TILE_INK, y=0.6)
+        letter_tile('J', -0.42, 0.0, 2.0, TILE_GREEN, TILE_CREAM)
+        tile_shadow = add_ground_shadow(1.4)
+        tile_shadow.location = (-0.42, -0.05, 0.002)
+        place_mascot(build_floyd('wave'), 1.25, 0.0, 0.5, -20)
+        return 0.0, 2.3
+    raise ValueError('unknown icon variant: ' + variant)
+
+
+def render_tile_art(variant, path, frame_height, size=1024):
+    reset_scene()
+    setup_render(size)
+    setup_lights()
+    bottom, top = build_tile_scene(variant)
+    setup_camera((bottom + top) / 2 - 0.05, frame_height, lens=85)
+    bpy.context.scene.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+
+
+def lay_over_gradient(art, top_hex, bottom_hex, circle=False):
+    # Like lay_over, but the background fades from top_hex to bottom_hex.
+    import numpy as np
+    def rgb(text):
+        text = text.lstrip('#')
+        return np.array([int(text[i:i + 2], 16) / 255 for i in (0, 2, 4)], dtype=np.float32)
+    height, width = art.shape[:2]
+    # Blender stores rows bottom first, so row 0 is the bottom of the picture
+    t = np.linspace(0.0, 1.0, height, dtype=np.float32)[:, None, None]
+    background = rgb(bottom_hex) * (1 - t) + rgb(top_hex) * t
+    alpha = art[..., 3:4]
+    out = np.zeros_like(art)
+    out[..., :3] = art[..., :3] * alpha + background * (1 - alpha)
+    out[..., 3] = 1.0
+    if circle:
+        ys, xs = np.mgrid[0:height, 0:width]
+        r = width / 2
+        distance = np.sqrt((xs + 0.5 - r) ** 2 + (ys + 0.5 - r) ** 2)
+        out[..., 3] = np.clip(r - distance, 0, 1)
+    return out
+
+
+def render_tile_icons(out_dir, variant):
+    # "full" fills the square; "safe" keeps the art inside the middle part for
+    # icons the system crops to a circle or squircle; "fg" is Android's foreground.
+    # the art is 3.75 wide, so 4.75 leaves about a 10% margin on each side
+    tight = 4.75
+    render_tile_art(variant, os.path.join(out_dir, 'art-full.png'), tight)
+    render_tile_art(variant, os.path.join(out_dir, 'art-safe.png'), tight / 0.8)
+    render_tile_art(variant, os.path.join(out_dir, 'art-fg.png'), tight / 0.62)
     full = load_pixels(os.path.join(out_dir, 'art-full.png'))
     safe = load_pixels(os.path.join(out_dir, 'art-safe.png'))
     fg = load_pixels(os.path.join(out_dir, 'art-fg.png'))
-    save_pixels(lay_over(full, ICON_BACKGROUND), os.path.join(out_dir, 'icon-full.png'))
-    save_pixels(lay_over(safe, ICON_BACKGROUND), os.path.join(out_dir, 'icon-safe.png'))
-    save_pixels(lay_over(safe, ICON_BACKGROUND, circle=True), os.path.join(out_dir, 'icon-round.png'))
+    save_pixels(lay_over_gradient(full, ICON_TOP, ICON_BOTTOM), os.path.join(out_dir, 'icon-full.png'))
+    save_pixels(lay_over_gradient(safe, ICON_TOP, ICON_BOTTOM), os.path.join(out_dir, 'icon-safe.png'))
+    save_pixels(lay_over_gradient(safe, ICON_TOP, ICON_BOTTOM, circle=True),
+                os.path.join(out_dir, 'icon-round.png'))
     # Android draws the foreground on its own background color, so this one is
     # opaque too and the icon looks the same everywhere.
-    save_pixels(lay_over(fg, ICON_BACKGROUND), os.path.join(out_dir, 'icon-fg.png'))
+    save_pixels(lay_over_gradient(fg, ICON_TOP, ICON_BOTTOM), os.path.join(out_dir, 'icon-fg.png'))
+
+
+def render_tile_previews(out_dir, variants):
+    # One full and one round picture per variant, to compare them side by side.
+    for variant in variants:
+        path = os.path.join(out_dir, 'art-' + variant + '.png')
+        render_tile_art(variant, path, 4.75)
+        art = load_pixels(path)
+        save_pixels(lay_over_gradient(art, ICON_TOP, ICON_BOTTOM),
+                    os.path.join(out_dir, 'icon-' + variant + '.png'))
 
 
 def add_text(body, x, z, size, mat):
@@ -806,6 +961,11 @@ def main():
             out_dir = args[i + 1]
         elif args[i] == '--size':
             size = int(args[i + 1])
+        elif args[i] == '--icon-previews':
+            # every icon variant once, to pick one: --icon-previews DIR duo,floyd,pair
+            os.makedirs(args[i + 1], exist_ok=True)
+            render_tile_previews(args[i + 1], args[i + 2].split(','))
+            return
         elif args[i] == '--icons':
             # icons and the share image instead of sprites
             os.makedirs(args[i + 1], exist_ok=True)

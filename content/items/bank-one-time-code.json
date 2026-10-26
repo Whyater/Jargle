@@ -63,5 +63,14 @@
   "checked_on": null,
   "difficulty": 3,
   "decisive_clue": 3,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "The bank sent me a short ___ that worked for one sign-in only and stopped working after a few minutes.",
+    "wrong": [
+      "PIN",
+      "security question"
+    ]
+  },
+  "why": "It works once and stops working after a few minutes, so an old one is useless.",
+  "short": "Code that works for one sign-in"
 }

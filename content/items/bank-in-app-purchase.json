@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I bought extra coins for my game without ever leaving the app. That is ___.",
+    "wrong": [
+      "mobile check deposit",
+      "direct deposit"
+    ]
+  },
+  "why": "You pay without leaving the app, so watch your account for charges.",
+  "short": "Paying for extras inside an app"
 }

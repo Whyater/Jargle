@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I answered the phone and heard only a recorded message, not a live person. It was a ___.",
+    "wrong": [
+      "spoofing",
+      "catfishing"
+    ]
+  },
+  "why": "Many are unwanted, and some are scams.",
+  "short": "Call with a recorded message"
 }

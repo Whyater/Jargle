@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "how-the-internet-works",
   "term": "the cloud",
+  "puzzle": "CLOUD",
   "meaning": "A place to keep files on a company's computers. You reach them over the internet, so they are not only on your device.",
   "clues": [
     "It's a place to keep your photos and files.",
@@ -75,5 +76,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "My photos live on a company's computers in ___, so I can open them from my phone or my laptop.",
+    "wrong": [
+      "the hard drive",
+      "the memory card"
+    ]
+  },
+  "why": "Your files are still there if you lose your phone, but guard the account.",
+  "short": "Files kept on the internet",
+  "situations": [
+    {
+      "text": "A text says your cloud storage is full and has a link. You contact the company through a website you already know instead.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Safe",
+      "why": "Use a number or website you know is real, not the link."
+    }
+  ]
 }

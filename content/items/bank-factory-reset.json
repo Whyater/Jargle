@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "To wipe my old phone before giving it away, I did a ___, which erased my photos, apps, and settings.",
+    "wrong": [
+      "battery saver",
+      "do not disturb"
+    ]
+  },
+  "why": "It erases your photos, apps, and settings and returns the device to how it was.",
+  "short": "Erase everything, back to new"
 }

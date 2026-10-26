@@ -59,5 +59,40 @@
       "url": "https://www.cisa.gov/secure-our-world/update-software"
     }
   ],
-  "checked_on": null
+  "checked_on": null,
+  "words": [
+    "bank-app-store",
+    "bank-cellular-data",
+    "bank-battery-saver",
+    "bank-home-screen"
+  ],
+  "situations": [
+    {
+      "text": "You ignore the update reminders on your phone for months.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "CISA says many updates fix security risks. Install them as soon as you can."
+    },
+    {
+      "text": "Can your phone install updates on its own if you turn on automatic updates?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "Turn on automatic updates in your device or app settings."
+    },
+    {
+      "text": "Your apps and your web browser need updates too, not just the phone system.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "CISA says the phone system, programs, apps, and browsers all need updates."
+    }
+  ]
 }

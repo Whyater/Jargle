@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 3,
   "decisive_clue": 3,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A program learns by studying many examples. That pile of examples is its ___.",
+    "wrong": [
+      "prompt",
+      "CAPTCHA"
+    ]
+  },
+  "why": "More varied examples usually help a program guess better.",
+  "short": "Examples a program learns from"
 }

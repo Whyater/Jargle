@@ -6,6 +6,7 @@ export { MeaningMatch } from './MeaningMatch';
 export { NameIt } from './NameIt';
 export { TrueFalse } from './TrueFalse';
 export { OldNew } from './OldNew';
+export { SpellIt } from './SpellIt';
 export { ClueClimb, cluePoints } from './ClueClimb';
 export { Choice, choiceState } from './Choice';
 export { choiceForKey } from './keys';

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "locks-and-keys",
   "term": "two-factor login",
+  "puzzle": "LOGIN",
   "meaning": "A way to log in with your password plus a second proof, like a code texted to you. A stolen password alone won't work.",
   "clues": [
     "To get in, you must show two different kinds of proof, such as something you know and something you have.",
@@ -83,5 +84,25 @@
   ],
   "checked_on": null,
   "difficulty": 1,
-  "decisive_clue": 1
+  "decisive_clue": 1,
+  "blank": {
+    "sentence": "Even with her stolen password, the crook could not get in, because her ___ also needed a code texted to her phone.",
+    "wrong": [
+      "security question",
+      "single sign-on"
+    ]
+  },
+  "why": "It keeps your account safe even if someone steals your password.",
+  "short": "Password plus a second proof",
+  "situations": [
+    {
+      "text": "A caller says they work for your email company and asks you to read out the code that was just texted to you.",
+      "options": [
+        "Scam",
+        "Safe"
+      ],
+      "answer": "Scam",
+      "why": "Never share a code with someone who contacts you first."
+    }
+  ]
 }

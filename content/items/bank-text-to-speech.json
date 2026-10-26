@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 1,
   "decisive_clue": 1,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "My phone read the article out loud in a computer-made voice using ___.",
+    "wrong": [
+      "speech to text",
+      "image generator"
+    ]
+  },
+  "why": "It reads written words out loud for you.",
+  "short": "Computer voice reads text aloud"
 }

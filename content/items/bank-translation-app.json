@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "I pointed my camera at the sign, and my ___ changed its words into my language.",
+    "wrong": [
+      "image generator",
+      "speech to text"
+    ]
+  },
+  "why": "It changes words from one language to another, by typing, speaking, or camera.",
+  "short": "Turns words into another language"
 }

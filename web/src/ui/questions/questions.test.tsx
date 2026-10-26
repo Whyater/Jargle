@@ -516,3 +516,73 @@ describe('TrueFalse glyphs', () => {
     expect(glyphOf(buttons[1])).toBe('none');
   });
 });
+
+describe('Spell it (letter tiles) in Endless', () => {
+  function tilesQuestion(): Question {
+    return {
+      id: 'tiles:byte:1:0',
+      kind: 'tiles',
+      itemId: 'byte',
+      difficulty: 1,
+      why: 'byte: a small piece of data',
+      meaning: 'A small piece of data.',
+      term: 'byte',
+      options: ['byte'],
+      answer: 'byte',
+    };
+  }
+
+  function tapLetter(root: HTMLElement, letter: string) {
+    const tiles = root.querySelectorAll<HTMLButtonElement>('.lt-tray .lt-tile');
+    for (let i = 0; i < tiles.length; i++) {
+      if (tiles[i].getAttribute('aria-label') === 'Letter ' + letter) {
+        act(() => tiles[i].click());
+        return;
+      }
+    }
+    throw new Error('No tile ' + letter);
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('shows the meaning, the kind tag and the tiles', () => {
+    const root = mount(<QuestionView question={tilesQuestion()} picked={null} onAnswer={vi.fn()} tag="Spell it" />);
+    expect(root.textContent).toContain('A small piece of data.');
+    expect(root.textContent).toContain('Spell it');
+    expect(root.querySelectorAll('.lt-tray .lt-tile')).toHaveLength(4);
+  });
+
+  it('sends the word and the tile score when it is spelled right', () => {
+    vi.useFakeTimers();
+    const onAnswer = vi.fn();
+    const root = mount(<QuestionView question={tilesQuestion()} picked={null} onAnswer={onAnswer} />);
+    for (const letter of 'BYTE') tapLetter(root, letter);
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(onAnswer).toHaveBeenCalledTimes(1);
+    const answer: EndlessAnswer = onAnswer.mock.calls[0][0];
+    expect(answer.choice).toBe('byte');
+    expect(answer.tileScore).toBe(18);
+  });
+
+  it('sends a wrong answer only after the second wrong try', () => {
+    vi.useFakeTimers();
+    const onAnswer = vi.fn();
+    const root = mount(<QuestionView question={tilesQuestion()} picked={null} onAnswer={onAnswer} />);
+    for (const letter of 'YBTE') tapLetter(root, letter);
+    act(() => {
+      vi.advanceTimersByTime(1200);
+    });
+    expect(onAnswer).not.toHaveBeenCalled();
+    for (const letter of 'ETYB') tapLetter(root, letter);
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(onAnswer).toHaveBeenCalledTimes(1);
+    expect(onAnswer.mock.calls[0][0].choice).toBe('');
+    expect(onAnswer.mock.calls[0][0].tileScore).toBe(0);
+  });
+});

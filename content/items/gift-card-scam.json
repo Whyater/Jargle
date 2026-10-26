@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "scams-and-fakes",
   "term": "gift card scam",
+  "puzzle": "GIFT",
   "meaning": "A trick that pressures you to buy a gift card and give away its number or PIN as payment.",
   "clues": [
     "It pressures you to pay or send money quickly because of a made-up problem.",
@@ -71,5 +72,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "A caller said I owed a bill and must read out the numbers on a store card. That is a ___.",
+    "wrong": [
+      "wire transfer scam",
+      "fake check scam"
+    ]
+  },
+  "why": "A real business or government office will not demand payment this way.",
+  "short": "Trick demanding store card numbers",
+  "situations": [
+    {
+      "text": "You buy a gift card for your niece and give it to her for her birthday.",
+      "options": [
+        "Scam",
+        "Safe"
+      ],
+      "answer": "Safe",
+      "why": "A gift card is a gift for someone you know, never a bill payment."
+    }
+  ]
 }

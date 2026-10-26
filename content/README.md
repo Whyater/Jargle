@@ -16,8 +16,10 @@ never makes up text while you play. Each file follows the types in
 | `ptp_extras.json` | `ptp-1` and `ptp-2`, which are never daily words |
 | `common_words.json` | Everyday words any item may use |
 | `miss_lines.json` | What Floyd and Bud say after a wrong guess |
+| `jargle_words.txt` | Daily Jargle guess words, built from SCOWL |
 
-A common word can never be a daily word.
+A common word can never be a daily word. `scripts/build-jargle-words.mjs` rebuilds
+`jargle_words.txt`.
 
 ## How to add a word
 
@@ -42,10 +44,27 @@ A common word can never be a daily word.
    set it to that date (`YYYY-MM-DD`).
 9. Add the word to a future date in `schedule.json`. Dates that have
    already passed stay as they are.
+10. A daily word also needs a `puzzle`: 4 to 7 capital letters. Use the term
+   when it fits (write Wi-Fi as `WIFI`), or choose its clearest single word.
 
 A daily word can't show up early. Items that come out on or before a
 word's day may not use that word, except the word's own item. The
 checker finds these for you.
+
+## Lesson fields
+
+Lessons play as short sessions of mixed steps. These fields feed them.
+All of them are optional.
+
+- `blank` (item): a real sentence with `___` where the word goes, plus
+  2 or 3 wrong choices that clearly don't fit.
+- `why` (item): why the word matters, in 20 words or fewer.
+- `short` (item): the meaning in 6 words or fewer, for Match pairs.
+- `situations` (item, 1 to 4; lesson, 2 to 4): a short real moment
+  with 2 choices like Scam and Safe, the right one, and a reason.
+  The moment has 35 words or fewer and the reason 25 or fewer.
+- `words` (lesson): 4 item ids from the lesson's topic. Each needs a
+  `blank` and must be out by the lesson's day, so bank words work best.
 
 ## Bank words
 

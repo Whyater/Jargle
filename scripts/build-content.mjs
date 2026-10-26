@@ -15,7 +15,7 @@ printResult(result, strict);
 if (result.errors.length) {
   process.exitCode = 1;
 } else {
-  const topicOrder = ['locks-and-keys', 'talking-computers', 'scams-and-fakes', 'your-phone', 'internet-talk', 'how-the-internet-works', 'money-on-your-phone'];
+  const topicOrder = ['locks-and-keys', 'scams-and-fakes', 'your-phone', 'internet-talk', 'how-the-internet-works', 'money-on-your-phone', 'talking-computers'];
   const lessons = [...result.content.lessons].sort((first, second) => topicOrder.indexOf(first.topic) - topicOrder.indexOf(second.topic) || first.number - second.number);
   const items = Object.fromEntries([...result.content.items.entries()].sort(([first], [second]) => first.localeCompare(second)));
   // The apps swap in a downloaded bundle only when its version is higher than the one they ship,

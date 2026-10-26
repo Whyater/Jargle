@@ -67,5 +67,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "A message said I won a contest but had to pay a fee to collect. That was a ___.",
+    "wrong": [
+      "romance scam",
+      "tech support scam"
+    ]
+  },
+  "why": "You are told to pay a fee or share private details to collect.",
+  "short": "Fake win that needs a fee"
 }

@@ -13,6 +13,7 @@ import { feedback } from '../components/feedback';
 import { ProgressBar } from '../components/ProgressBar';
 import { Streak, XpBadge } from '../components/XpBadge';
 import { InAppNote } from './InAppNote';
+import { HomeLessonsCard } from './HomeLessonsCard';
 import { commit, useApp } from '../store';
 import { engine } from '../engine';
 import { hrefFor, navigate } from '../router';
@@ -37,6 +38,9 @@ import {
 import type { WotdState } from './homeLogic';
 import type { ContentBundle, SaveState, TextSize } from '../../engine/types';
 import type { HomeView } from '../../engine/api';
+// --- Daily Jargle (v2.1) ---
+import type { JargleView } from '../../engine/api';
+import { JargleMini } from './JargleMini';
 
 export function HomeScreen() {
   const app = useApp();
@@ -80,6 +84,7 @@ export function HomeScreen() {
     );
   }
 
+  // --- Daily Jargle (v2.1) --- Play opens the letter grid game instead of the clue round.
   function openToday() {
     if (!hv.today) return;
     const itemId = todayItemId(content, today);
@@ -88,7 +93,7 @@ export function HomeScreen() {
     if (!save.flags.textSizeAsked) {
       commit({ ...save, flags: { ...save.flags, textSizeAsked: true } });
     }
-    openRound(hv.today.key, itemId, 'daily');
+    navigate('jargle');
   }
 
   function openGrace() {
@@ -102,7 +107,17 @@ export function HomeScreen() {
     }
   }
 
-  const wotd = wotdState(hv, save);
+  let wotd = wotdState(hv, save);
+  // --- Daily Jargle (v2.1) --- once today's Jargle is played, it decides the card.
+  const jargle = engine.jargleView(save, content, today);
+  if (jargle && jargle.finished) {
+    wotd = jargle.status === 'won' ? { kind: 'solved', bars: 0 } : { kind: 'missed' };
+  } else if (jargle && jargle.started && wotd.kind === 'play') {
+    wotd = { kind: 'continue' };
+  } else if (wotd.kind === 'play' && hv.phase === 'played') {
+    // A progress code brings back the counted day but not the game itself, so show the day as done.
+    wotd = { kind: 'missed' };
+  }
   const finished = wotd.kind === 'solved' || wotd.kind === 'missed';
   const greeting = greetingFor(wotd.kind, hv.streak, new Date().getHours());
   const bigText = save.settings.textSize === 'largest';
@@ -130,7 +145,7 @@ export function HomeScreen() {
         {/* Once today's word is done, Endless becomes the big next step. */}
         {finished ? <EndlessCard best={readEndlessBest(save)} featured /> : null}
 
-        <WordOfTheDay hv={hv} wotd={wotd} today={today} pulse={justIntroduced} onPlay={openToday} />
+        <WordOfTheDay hv={hv} wotd={wotd} jargle={jargle} today={today} pulse={justIntroduced} onPlay={openToday} />
 
         {/* At the biggest text the greeting moves under the card, so Play stays on the first screen. */}
         {bigText ? stage : null}
@@ -149,6 +164,9 @@ export function HomeScreen() {
         ) : null}
 
         {finished ? null : <EndlessCard best={readEndlessBest(save)} />}
+
+        {/* Desktop grid (v2.1): a Lessons tile. Phones see it once today's word is done. */}
+        <HomeLessonsCard save={save} content={content} today={today} onPhone={finished} />
 
         <MoreGames hv={hv} save={save} content={content} today={today} />
 
@@ -238,12 +256,16 @@ function ProgressHeader({ save, streak }: { save: SaveState; streak: number }) {
 interface WordOfTheDayProps {
   hv: HomeView;
   wotd: WotdState;
+  /** Daily Jargle (v2.1): today's letter grid game, or null when there is no word. */
+  jargle: JargleView | null;
   today: string;
   pulse: boolean;
   onPlay: () => void;
 }
 
-function WordOfTheDay({ hv, wotd, today, pulse, onPlay }: WordOfTheDayProps) {
+function WordOfTheDay({ hv, wotd, jargle, today, pulse, onPlay }: WordOfTheDayProps) {
+  // --- Daily Jargle (v2.1) ---
+  const jargleDone = !!jargle && jargle.finished;
   const dayLine = hv.today ? 'No. ' + hv.today.day + ' · ' + shortDate(today) : shortDate(today);
   const finished = wotd.kind === 'solved' || wotd.kind === 'missed';
 
@@ -258,7 +280,7 @@ function WordOfTheDay({ hv, wotd, today, pulse, onPlay }: WordOfTheDayProps) {
 
       {wotd.kind === 'play' ? (
         <>
-          <p class="wotd-text wotd-intro">Guess today's tech word from a few clues.</p>
+          <p class="wotd-text wotd-intro">Guess today's tech word in 6 tries. Every miss unlocks a clue.</p>
           <Button variant="sunny" big block sound onClick={onPlay} gameIcon="play">
             Play
           </Button>
@@ -274,7 +296,10 @@ function WordOfTheDay({ hv, wotd, today, pulse, onPlay }: WordOfTheDayProps) {
         </>
       ) : null}
 
-      {wotd.kind === 'solved' ? (
+      {/* --- Daily Jargle (v2.1) --- */}
+      {jargleDone && jargle ? <JargleMini view={jargle} /> : null}
+
+      {wotd.kind === 'solved' && !jargleDone ? (
         <div class="wotd-done">
           <Battery bars={wotd.bars} small />
           <p class="wotd-text">
@@ -283,7 +308,7 @@ function WordOfTheDay({ hv, wotd, today, pulse, onPlay }: WordOfTheDayProps) {
         </div>
       ) : null}
 
-      {wotd.kind === 'missed' ? <p class="wotd-text">Done! You learned today's word.</p> : null}
+      {wotd.kind === 'missed' && !jargleDone ? <p class="wotd-text">Done! You learned today's word.</p> : null}
 
       {wotd.kind === 'none' ? <p class="wotd-text">New words are on the way. Open Jargle online to get them.</p> : null}
 
@@ -483,7 +508,7 @@ function Intro({ save, onDone }: { save: SaveState; onDone: () => void }) {
               <GameIcon name="star" />
             </span>
             <span>
-              <strong>Word of the Day.</strong> Guess the word from clues. Each extra clue uses a bar.
+              <strong>Word of the Day.</strong> Guess the word in 6 tries. Each miss unlocks a clue.
             </span>
           </li>
           <li>

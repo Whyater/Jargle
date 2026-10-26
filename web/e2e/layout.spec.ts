@@ -38,19 +38,21 @@ const SCREENS = [
 // The screens with the most text, checked for overlap at Largest.
 const KEY_SCREENS = ['play', 'learn', 'me', 'endless', 'lesson', 'how', 'badges'];
 
-/** Opens today's daily round from the Word of the Day card. */
+/** Opens today's Daily Jargle (the letter grid game) from the Word of the Day card. */
 async function openDaily(page: Page): Promise<void> {
   await goToHash(page, '#/', 'Jargle');
   await page.getByRole('region', { name: 'Word of the Day' }).getByRole('button', { name: /^(Play|Continue)$/ }).click();
-  await page.getByRole('button', { name: 'Check', exact: true }).waitFor({ state: 'visible' });
+  await page.getByRole('group', { name: 'Keyboard' }).waitFor({ state: 'visible' });
 }
 
-/** Opens Endless and starts a run, then waits for the first question's answer buttons. */
+/** Opens Endless and starts a run, then waits for either question control. */
 async function startEndless(page: Page): Promise<void> {
   await goToHash(page, '#/endless', 'Endless');
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await page.getByRole('button', { name: 'End run' }).waitFor({ state: 'visible' });
-  await page.locator('[data-option]').first().waitFor({ state: 'visible' });
+  await expect.poll(async () => {
+    return (await page.locator('[data-option]').count()) > 0 || (await page.locator('.lt .lt-tile').count()) > 0;
+  }).toBe(true);
 }
 
 async function checkScreen(page: Page, label: string): Promise<void> {
@@ -213,8 +215,26 @@ for (const viewport of OVERLAP_SIZES) {
     await waitForAnimations(page);
     for (const problem of await findOverlappingText(page)) problems.push(`endless run: ${problem}`);
     await saveScreen(page, `largest-${viewport.name}-endless-run`);
-    // Answer once, then end the run to see the game over screen.
-    await page.locator('[data-option]').first().click();
+    // Answer once when this is a choice question. Tile questions need one completed
+    // answer before End run can save the run and show Game over.
+    const options = page.locator('[data-option]');
+    if (await options.count() > 0) await options.first().click();
+    else {
+      const slots = page.getByRole('group', { name: /Your word, \d+ letters/ });
+      const slotLabel = await slots.getAttribute('aria-label');
+      const slotCount = Number(slotLabel?.match(/(\d+) letters/)?.[1] || 0);
+      const fillTiles = async () => {
+        for (let i = 0; i < slotCount; i += 1) {
+          await page.locator('.lt-tray button').first().click();
+        }
+      };
+      await fillTiles();
+      await expect(page.getByText(/You got it!|Not quite\. One more try!/).first()).toBeVisible();
+      if (await page.getByText('Not quite. One more try!', { exact: true }).count() > 0) {
+        await fillTiles();
+        await expect(page.getByText(/You got it!|Here is the word/).first()).toBeVisible();
+      }
+    }
     await page.getByRole('button', { name: 'End run' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Game over', exact: true })).toBeAttached();
     await waitForAnimations(page);

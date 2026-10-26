@@ -68,5 +68,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "The site used ___, so my information was scrambled on its way and others could not read it.",
+    "wrong": [
+      "cache",
+      "modem"
+    ]
+  },
+  "why": "It scrambles what you send so others cannot read it on the way.",
+  "short": "Secure way browsers talk to sites"
 }

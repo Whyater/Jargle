@@ -64,5 +64,14 @@
   "checked_on": null,
   "difficulty": 2,
   "decisive_clue": 2,
-  "bank": true
+  "bank": true,
+  "blank": {
+    "sentence": "My nephew's concert was shown over the internet as it happened, so I watched the ___ at home.",
+    "wrong": [
+      "selfie",
+      "meme"
+    ]
+  },
+  "why": "Viewers watch it as it happens, not later.",
+  "short": "Video shown live over the internet"
 }

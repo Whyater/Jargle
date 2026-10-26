@@ -21,6 +21,9 @@ describe('xp', () => {
     expect(xpFor({ type: 'endless', correct: true, combo: 3 })).toBe(15);
     expect(xpFor({ type: 'endless', correct: true, combo: 6 })).toBe(15);
     expect(xpFor({ type: 'endless', correct: false, combo: 3 })).toBe(0);
+    expect(xpFor({ type: 'jargle', won: true, guesses: 1 })).toBe(70);
+    expect(xpFor({ type: 'jargle', won: true, guesses: 6 })).toBe(20);
+    expect(xpFor({ type: 'jargle', won: false, guesses: 6 })).toBe(10);
   });
 
   it('handles level boundaries and invalid input', () => {

@@ -59,6 +59,7 @@ export function hintFor(question: Question): string {
   if (question.kind === 'name') return 'Picture it, then pick it.';
   if (question.kind === 'truefalse') return 'Trust your gut!';
   if (question.kind === 'oldnew') return 'Old like Floyd, or new like Bud?';
+  if (question.kind === 'tiles') return 'Tap or type the letters!';
   return 'Fewer clues, more points!';
 }
 

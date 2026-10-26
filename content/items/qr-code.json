@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "your-phone",
   "term": "QR code",
+  "puzzle": "QRCODE",
   "meaning": "A square pattern of tiny black and white boxes. Point your phone camera at it to open a web page, see a menu, or pay.",
   "clues": [
     "You hold your phone up near it to use it.",
@@ -86,5 +87,25 @@
   ],
   "checked_on": null,
   "difficulty": 3,
-  "decisive_clue": 3
+  "decisive_clue": 3,
+  "blank": {
+    "sentence": "I pointed my phone camera at the ___ on the menu, a square of tiny black and white boxes.",
+    "wrong": [
+      "barcode",
+      "NFC tag"
+    ]
+  },
+  "why": "Be careful with ones that come in surprise texts or look stuck on top of another.",
+  "short": "Square pattern your camera can read",
+  "situations": [
+    {
+      "text": "A QR code arrives in an email you did not expect and tells you to scan it.",
+      "options": [
+        "Safe",
+        "Risky"
+      ],
+      "answer": "Risky",
+      "why": "Skip ones that come in a text or email you did not expect."
+    }
+  ]
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "your-phone",
   "term": "autocorrect",
+  "puzzle": "CORRECT",
   "meaning": "A phone keyboard feature that fixes misspelled words as you type.",
   "clues": [
     "It fixes a misspelled word as you type. It does not take speech, guess the next word, or swap a saved phrase.",
@@ -67,5 +68,25 @@
   ],
   "checked_on": null,
   "difficulty": 1,
-  "decisive_clue": 1
+  "decisive_clue": 1,
+  "blank": {
+    "sentence": "While I typed my text, my phone's ___ changed a misspelled word by itself.",
+    "wrong": [
+      "dictation",
+      "text replacement"
+    ]
+  },
+  "why": "It can fix typos, but it can also change words you meant. Read before you send.",
+  "short": "Keyboard fixes your typos for you",
+  "situations": [
+    {
+      "text": "Your phone changed a word you typed. Can you tap the delete key right away to undo it?",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "answer": "Yes",
+      "why": "Tapping delete right away undoes the change. Read before you send."
+    }
+  ]
 }

@@ -3,6 +3,7 @@
   "kind": "term",
   "topic": "internet-talk",
   "term": "hashtag",
+  "puzzle": "HASHTAG",
   "meaning": "A word or phrase with a # in front. Posts use it so people can find others on the same topic.",
   "clues": [
     "You see it in social media posts.",
@@ -75,5 +76,25 @@
   ],
   "checked_on": null,
   "difficulty": 2,
-  "decisive_clue": 2
+  "decisive_clue": 2,
+  "blank": {
+    "sentence": "Tap the ___ on a post to see other posts about the same holiday.",
+    "wrong": [
+      "caption",
+      "username"
+    ]
+  },
+  "why": "It helps you find posts on one topic, like a holiday or an event.",
+  "short": "Word with # that sorts posts",
+  "situations": [
+    {
+      "text": "Typing a # and a holiday word into a social media search box shows posts on that topic.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "answer": "True",
+      "why": "Tap one and you can usually see other posts that share it."
+    }
+  ]
 }
