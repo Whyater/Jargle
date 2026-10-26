@@ -1,5 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { Icon } from './Icons';
+import { GameIcon } from './GameIcon';
+import type { GameIconName } from './GameIcon';
 
 interface RowLinkProps {
   title: ComponentChildren;
@@ -10,12 +12,19 @@ interface RowLinkProps {
   mark?: 'check' | 'lock' | null;
   /** Locked rows stay in the list but cannot be opened. */
   locked?: boolean;
+  /** Optional icon at the start of the row. */
+  icon?: GameIconName;
 }
 
 /** One banded row in a .rows list. A link when it has an href, else a button. */
-export function RowLink({ title, note, href, onClick, mark, locked }: RowLinkProps) {
+export function RowLink({ title, note, href, onClick, mark, locked, icon }: RowLinkProps) {
   const inside = (
     <>
+      {icon ? (
+        <span class="row-icon">
+          <GameIcon name={icon} />
+        </span>
+      ) : null}
       <span class="main">
         <span class="title">{title}</span>
         {note ? <span class="note">{note}</span> : null}

@@ -57,6 +57,24 @@ describe('storage', () => {
     expect(loaded?.missLineQueue).toEqual({ floyd: [], bud: [] });
   });
 
+  it('keeps XP and Endless scores through a save and load', () => {
+    const value = { ...state(), xp: 45, endlessBest: 120, endlessGames: 3 };
+    saveState('jargle:v1', value);
+    const loaded = loadState('jargle:v1');
+    expect(loaded?.xp).toBe(45);
+    expect(loaded?.endlessBest).toBe(120);
+    expect(loaded?.endlessGames).toBe(3);
+  });
+
+  it('keeps the bigger XP and Endless scores when two tabs merge', () => {
+    const mine = { ...state(), xp: 45, endlessBest: 30, endlessGames: 1 };
+    const theirs = { ...state(), xp: 20, endlessBest: 90, endlessGames: 4 };
+    const merged = mergeStates(mine, theirs);
+    expect(merged.xp).toBe(45);
+    expect(merged.endlessBest).toBe(90);
+    expect(merged.endlessGames).toBe(4);
+  });
+
   it('returns false when storage throws', () => {
     const original = window.localStorage;
     Object.defineProperty(window, 'localStorage', { configurable: true, value: { setItem: () => { throw new Error('blocked'); }, getItem: () => null, removeItem: () => undefined } });

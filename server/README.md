@@ -1,13 +1,14 @@
+<!-- markdownlint-disable MD013 -->
 # Jargle server
 
-This folder installs the always-on Jargle web server on an Oracle Cloud VM. GitHub Pages remains the main public site at https://whyater.github.io/Jargle/.
+This folder installs the always-on Jargle web server on an Oracle Cloud VM. GitHub Pages remains the main public site at <https://whyater.github.io/Jargle/>.
 
 ## What runs where
 
 | URL | What it is | Status |
 | --- | --- | --- |
-| https://whyater.github.io/Jargle/ | Main public site | Works without the VM |
-| https://jargle.161-153-13-14.sslip.io/ | Caddy HTTPS site on the VM | Works after Oracle ports 80 and 443 are open |
+| <https://whyater.github.io/Jargle/> | Main public site | Works without the VM |
+| <https://jargle.161-153-13-14.sslip.io/> | Caddy HTTPS site on the VM | Works after Oracle ports 80 and 443 are open |
 | `/downloads/` | Download mirror | Copies installers from the newest GitHub release |
 
 The VM uses Ubuntu 24.04 arm64 on Oracle Cloud Always Free. The setup uses an external configuration file at `/etc/jargle/jargle.env`, so machine-specific values stay out of this repository.
@@ -28,7 +29,7 @@ sudo editor /etc/jargle/jargle.env
 
 The VM firewall is opened by `setup.sh`, but Oracle has a second firewall outside the VM.
 
-1. Sign in at https://cloud.oracle.com/.
+1. Sign in at <https://cloud.oracle.com/>.
 2. Open **Menu > Networking > Virtual cloud networks**.
 3. Click the VCN, then **Security** (or the **Security Lists** tab).
 4. Open **Default Security List**, then click **Add Ingress Rules**.

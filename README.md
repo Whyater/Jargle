@@ -5,9 +5,9 @@
 
 # Jargle
 
-A daily game where you guess today's tech word from clues, hosted by a floppy disk and an earbud who each know something the other doesn't. For anyone who has ever asked "What is a Claude?"
+A daily game where you guess today's tech word from clues. Your hosts are Floyd the floppy disk and Bud the smartphone, who each know something the other doesn't. For anyone who has ever asked "What is a Claude?"
 
-It is made for adults who were handed new tech with no one to explain the words. You get one new word a day, and everyone plays the same one. A wrong guess still teaches you something.
+It is made for adults who were handed new tech with no one to explain the words. You get one new word a day, and everyone plays the same one. When you want more, Endless mode keeps the questions coming. A wrong guess still teaches you something.
 
 - **Play in your browser:** <https://whyater.github.io/Jargle/>
 - **Judge demo:** <https://whyater.github.io/Jargle/?demo=judge> (a made-up history, so you can see the game after a few days of play)
@@ -16,21 +16,36 @@ It is made for adults who were handed new tech with no one to explain the words.
 
 ## A day in Jargle
 
-1. Open Jargle. Home shows today's word, your **Days learned** and your streak.
+Jargle has three tabs at the bottom. They are Play, Learn and Me.
+
+1. Open Jargle. **Play** shows today's word, your streak and your level.
 2. Read the first clue. Pick one of four answer cards, then tap **Check**. Not sure? Tap **Next clue** for an easier one.
 3. A 6-bar battery replaces a clock. Taking an extra clue uses 1 bar (the last clue is free) and a wrong guess uses 3. If the bars run out, Jargle shows the answer and the day still counts as learned.
 4. A wrong card flips over and shows what that word means. You learn a second word that way.
-5. After the round you see the meaning and a short chat between Floyd (the floppy disk) and Bud (the earbud). Each word also links to the pages its facts came from.
-6. Share a short line like "Jargle #12: 4 bars left" if you want to. There are no accounts, points, hearts or timers. Your streak ends only after two missed days in a row.
+5. After the round you see the meaning and a short chat between Floyd (the floppy disk) and Bud (the smartphone). Each word also links to the pages its facts came from.
+6. Share a short line like "Jargle #12: 4 bars left" if you want to. Your streak ends only after two missed days in a row.
+
+There are no accounts and no timers. Right answers give you XP, and XP moves you up levels. Hearts only show up in Endless mode.
+
+### Endless mode
+
+Done with today's word? Endless lets you keep playing. You get 3 hearts, and a wrong answer takes one away. Right answers in a row build a combo, and the questions get harder as you go. Your best score is saved. Questions come in five kinds:
+
+- **Clue Climb:** guess the word from clues.
+- **Meaning Match:** see a word and pick what it means.
+- **Name It:** read a meaning and pick the word.
+- **True or False:** does this word mean this?
+- **Old or New:** is this old tech, or something you would see today?
+
+Endless asks about the words released so far, plus a bank of extra words (91 so far) that are never the word of the day.
 
 Around the daily word:
 
-- **Lessons** on topics like passwords and two-factor login.
-- **Review** brings back words you learned a few days ago.
-- **Floyd's Old Tech** is a set of old-tech words (rotary phone, floppy disk, phone book) where you might know more than Bud.
+- **Learn** shows the lessons as a path, on topics like passwords and two-factor login, with **Review** to bring back words you learned a few days ago.
+- **Old Tech** is a set of old-tech words (rotary phone, floppy disk, phone book) where you might know more than Bud.
 - **Pass the Phone** lets two people share one phone and swap who reads the clues.
 - **Practice** replays past words. Rounds that cannot count say so on screen.
-- **Badges** and a text size setting (Normal, Large, Largest). Tap targets are 48 px or larger.
+- **Me** holds your level, XP, stats, badges and settings, including a text size setting (Normal, Large, Largest).
 
 ---
 
@@ -94,7 +109,7 @@ On Windows, use Settings, then Apps, then Jargle. More detail is in [install/REA
 
 - Jargle has no accounts, ads or analytics.
 - Your progress is saved on your device only. The Mac, Windows and Android apps ask the server for new words, and the server keeps ordinary web logs, but your progress is not sent.
-- There are no AI features while you play. The clues and answers are written ahead of time and stored in the app.
+- The clues and answers are written ahead of time and stored in the app, so nothing is generated while you play.
 - To move to a new phone, use **Get a progress code** in Settings and type it in on the other device.
 
 ---
@@ -106,6 +121,7 @@ On Windows, use Settings, then Apps, then Jargle. More detail is in [install/REA
 - **Android.** [Capacitor](https://capacitorjs.com/) wraps the same web build.
 - **Server.** [Caddy](https://caddyserver.com/) on an Oracle Cloud VM hosts the site and a mirror of the downloads. The Mac, Windows and Android apps also ask it for new words.
 - **Builds and releases.** GitHub Actions runs the tests and builds the installers. GitHub Pages hosts the public site.
+- **Mascots.** Floyd and Bud are 3D characters made in Blender by a script in `art/`. They are small WebP images, so the app has no 3D code.
 - **Sounds** are made inside the app with the Web Audio API, so there are no audio files.
 
 | Folder | What is in it |
@@ -118,6 +134,7 @@ On Windows, use Settings, then Apps, then Jargle. More detail is in [install/REA
 | `install/` | The one-line installers for Mac and Windows |
 | `server/` | Setup files for the Caddy server |
 | `assets/` | The app icon |
+| `art/` | The Blender script that renders Floyd and Bud |
 
 ### Run it yourself
 
@@ -150,10 +167,13 @@ Words are JSON files in `content/items/`. Each one has clues, three decoys, and 
 
 ---
 
+## About the content
+
+Every word lists the sources it came from, and the app shows them under "Where this comes from." Once a person checks an item against its sources, its `checked_on` field gets the date. An item with no date has not been checked yet, and right now that is every item.
 
 ## Known limitations
 
-- The daily schedule runs through Sunday, December 6, 2026 (42 days, plus 12 Old Tech words and 14 lessons). More words are added over time.
+- The daily schedule starts on Sunday, October 25, 2026 and runs through Saturday, December 5, 2026 (42 days, plus 12 Old Tech words and 14 lessons). More words are added over time.
 - The Mac and Windows apps are not signed with paid certificates, so both systems show a warning on first open.
 - There is no Linux app and no App Store app. Use the website.
 - No word item has been checked by a person yet (see above).
@@ -161,11 +181,11 @@ Words are JSON files in `content/items/`. Each one has clues, three decoys, and 
 ## Screenshots
 
 <p>
-  <img src="docs/screenshots/home-demo.png" width="200" alt="Home screen of the judge demo, showing 8 days learned with Floyd and Bud">
-  <img src="docs/screenshots/round-wrong-card.png" width="200" alt="A clue round where a wrong card has flipped to show what it means">
-  <img src="docs/screenshots/reveal-floyd-bud.png" width="200" alt="The answer reveal with a short chat between Floyd and Bud">
-  <img src="docs/screenshots/lesson-card.png" width="200" alt="A lesson card about two-factor login">
-  <img src="docs/screenshots/get-jargle.png" width="200" alt="The Get Jargle page with install steps for each device">
+  <img src="docs/screenshots/home.png" width="200" alt="The Play tab, with the mascots, the Word of the Day card and Endless mode">
+  <img src="docs/screenshots/round.png" width="200" alt="A daily round with two clues shown and a wrong guess flipped to show what it means">
+  <img src="docs/screenshots/endless.png" width="200" alt="Endless mode, with hearts, a combo counter and a clue question">
+  <img src="docs/screenshots/learn.png" width="200" alt="The Learn tab, with review and practice shortcuts and lessons laid out as a path">
+  <img src="docs/screenshots/me.png" width="200" alt="The Me tab, with level, XP, streak and stats">
 </p>
 
 ---

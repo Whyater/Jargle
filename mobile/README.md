@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD013 -->
 # Jargle Android
 
 The Android app wraps the built Jargle web app with Capacitor.

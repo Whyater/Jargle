@@ -1,31 +1,19 @@
-/* Colors, type and page layout. Everything is in rem so the three text sizes scale the whole app. */
+/* Page basics and layout. Colors and sizes come from tokens.css. */
 
+/* Old names from the first look, kept as aliases so screens not yet restyled pick up the new colors. */
 :root {
-  --navy: #1f3a68;
-  --cream: #f6efdc;
-  --beige: #d8cbb0;
-  --yellow: #ffd23f;
-  --amber: #e08a1e;
-  --line: 2px solid #1f3a68;
+  --navy: var(--ink);
+  --cream: var(--bg);
+  --beige: var(--line-color);
+  --yellow: var(--sunny);
+  --amber: var(--sunny-deep);
+  --line: 2px solid var(--line-color);
 
-  --font-body: 'Atkinson Hyperlegible Next', 'Atkinson Fallback', Verdana, sans-serif;
-  --font-title: 'Young Serif', 'Young Serif Fallback', Georgia, serif;
+  --font-title: var(--font-display);
 
-  --speed-fast: 100ms;
-  --speed: 200ms;
+  --speed-fast: var(--t-fast);
+  --speed: var(--t-med);
   --speed-flip: 250ms;
-}
-
-/* Fallback faces sized close to the real ones so the swap does not shift the layout much. */
-@font-face {
-  font-family: 'Atkinson Fallback';
-  src: local('Verdana'), local('Arial');
-  size-adjust: 96%;
-}
-@font-face {
-  font-family: 'Young Serif Fallback';
-  src: local('Georgia'), local('Times New Roman');
-  size-adjust: 104%;
 }
 
 html {
@@ -53,9 +41,8 @@ body {
   background: var(--cream);
   color: var(--navy);
   font-family: var(--font-body);
-  font-size: 1.25rem;
-  line-height: 1.45;
-  /* Young Serif has old-style figures by default; a 1 can read as a capital I. */
+  font-size: var(--text-base);
+  line-height: var(--leading);
   font-variant-numeric: lining-nums;
   overflow-wrap: break-word;
   -webkit-tap-highlight-color: transparent;
@@ -64,20 +51,21 @@ body {
 h1,
 h2,
 h3 {
-  font-family: var(--font-title);
-  font-weight: 400;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.005em;
   font-variant-numeric: lining-nums;
   margin: 0;
 }
 h1 {
-  font-size: 1.75rem;
+  font-size: var(--text-xl);
 }
 h2 {
-  font-size: 1.375rem;
+  font-size: var(--text-lg);
 }
 h3 {
-  font-size: 1.25rem;
+  font-size: var(--text-md);
 }
 p {
   margin: 0;
@@ -112,21 +100,25 @@ svg {
 }
 
 ::selection {
-  background: var(--yellow);
-  color: var(--navy);
+  background: var(--sunny-soft);
+  color: var(--ink);
+}
+input,
+textarea {
+  caret-color: var(--grape);
 }
 
 /* Focus ring for keyboard users. The .mouse class is set on pointer input and cleared on keys. */
 :focus {
-  outline: 3px solid var(--navy);
-  outline-offset: 2px;
+  outline: 3px solid var(--grape);
+  outline-offset: 3px;
 }
 html.mouse :focus {
   outline: none;
 }
 html.mouse input:focus,
 html.mouse textarea:focus {
-  outline: 3px solid var(--navy);
+  outline: 3px solid var(--grape);
   outline-offset: 2px;
 }
 
@@ -142,7 +134,7 @@ html.mouse textarea:focus {
   white-space: nowrap;
 }
 
-/* The sheet: one centered column of printout paper. */
+/* The sheet: one centered column. Screens with the tab bar leave room for it at the bottom. */
 .sheet {
   position: relative;
   max-width: 30rem;
@@ -155,32 +147,8 @@ html.mouse textarea:focus {
   padding-right: calc(1rem + var(--safe-area-inset-right, env(safe-area-inset-right, 0px)));
   min-height: 100vh;
 }
-
-/* On wide screens the column gets tractor-feed sprocket strips on both sides. */
-@media (min-width: 45em) {
-  .sheet {
-    border-left: 2px dashed var(--beige);
-    border-right: 2px dashed var(--beige);
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-  .sheet::before,
-  .sheet::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 1.5rem;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='5' fill='none' stroke='%23D8CBB0' stroke-width='2'/%3E%3C/svg%3E");
-    background-size: 1.5rem 1.5rem;
-    background-repeat: repeat-y;
-  }
-  .sheet::before {
-    left: -3.25rem;
-  }
-  .sheet::after {
-    right: -3.25rem;
-  }
+.has-tabs .sheet {
+  padding-bottom: calc(var(--tabbar-h) + 1.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 /* Spacing helpers on an 8 px grid. */
@@ -195,18 +163,10 @@ html.mouse textarea:focus {
 }
 
 .small {
-  font-size: 1.0625rem;
+  font-size: var(--text-sm);
 }
 .center {
   text-align: center;
-}
-
-/* Perforation between sections of the sheet. */
-.perf {
-  border: 0;
-  border-top: 2px dashed var(--beige);
-  margin: 1.5rem 0;
-  height: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

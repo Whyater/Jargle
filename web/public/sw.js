@@ -10,6 +10,14 @@
     './icons/icon-512.png',
     './icons/favicon.svg'
   ];
+  // The mascot pictures, so every pose still shows when the phone is offline.
+  var poses = ['idle', 'blink', 'talk', 'happy', 'oops', 'think', 'wave'];
+  ['floyd', 'bud'].forEach(function (who) {
+    poses.forEach(function (pose) {
+      optional.push('./mascots/' + who + '-' + pose + '.webp');
+      optional.push('./mascots/' + who + '-' + pose + '@1x.webp');
+    });
+  });
 
   function cacheOne(cache, url) {
     return fetch(url).then(function (response) {

@@ -35,7 +35,7 @@ describe("lessons", function () {
     content.lessons[0].release_day = 3;
     const statuses = lessonStatuses(newState(), content, dateOfDay(1));
 
-    expect(statuses[0].lockLine).toBe("Opens Wednesday, October 28.");
+    expect(statuses[0].lockLine).toBe("Opens Tuesday, October 27.");
     expect(statuses[0].open).toBe(false);
   });
 
@@ -51,7 +51,7 @@ describe("lessons", function () {
 
     const statuses = lessonStatuses(state, content, dateOfDay(2));
 
-    expect(statuses[1].lockLine).toBe("Opens Wednesday, October 28.");
+    expect(statuses[1].lockLine).toBe("Opens Tuesday, October 27.");
     expect(statuses[1].open).toBe(false);
   });
 

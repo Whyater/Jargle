@@ -1,9 +1,10 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { leaveDemoHref, restartDemo, useApp } from '../store';
-import { hrefFor } from '../router';
+import { goBack, useRoute } from '../router';
 import { Button } from './Button';
-import { Icon } from './Icons';
+import { GameIcon } from './GameIcon';
+import { buzz } from './feedback';
 
 interface ScreenProps {
   title: string;
@@ -18,13 +19,18 @@ interface ScreenProps {
   quietTitle?: boolean;
 }
 
+// The first screen of each tab. These show a big title and no back button.
+const tabRoots = ['home', 'learn', 'me'];
+
 /**
- * Frame for every screen: Home / Settings / How to play, the running head, the demo strip,
- * and the heading that takes focus when the screen opens.
+ * Frame for every screen: the back button (or a big title on a tab's first screen), the demo
+ * strip, the running head, and the heading that takes focus when the screen opens.
  */
 export function Screen({ title, children, focusKey, isHome, runhead, runheadRight, quietTitle }: ScreenProps) {
   const app = useApp();
   const heading = useRef<HTMLHeadingElement>(null);
+  const route = useRoute();
+  const isRoot = isHome || tabRoots.indexOf(route.name) !== -1;
 
   useEffect(() => {
     document.title = isHome ? 'Jargle' : title + ' | Jargle';
@@ -35,23 +41,24 @@ export function Screen({ title, children, focusKey, isHome, runhead, runheadRigh
 
   return (
     <div class="sheet">
-      <nav class="topbar" aria-label="Main">
-        {isHome ? (
-          <span class="brand">Jargle</span>
-        ) : (
-          <a class="nav-link" href={hrefFor('home')}>
-            <Icon name="home" />
-            Home
-          </a>
-        )}
-        <span class="spacer" />
-        <a class="nav-link" href={hrefFor('settings')}>
-          Settings
-        </a>
-        <a class="nav-link" href={hrefFor('how')}>
-          How to play
-        </a>
-      </nav>
+      {isRoot ? null : (
+        <div class="screen-head">
+          <button
+            type="button"
+            class="icon-btn"
+            aria-label="Back"
+            onClick={() => {
+              buzz();
+              goBack();
+            }}
+          >
+            <GameIcon name="back" />
+          </button>
+          <h1 class="screen-title" tabIndex={-1} ref={heading}>
+            {title}
+          </h1>
+        </div>
+      )}
       {app.demo ? <DemoStrip full={!!isHome && app.demo === 'new'} /> : null}
       {app.status !== 'ready' || app.canSave ? null : (
         <p class="note-box small" style={{ marginTop: '0.5rem' }}>
@@ -64,9 +71,11 @@ export function Screen({ title, children, focusKey, isHome, runhead, runheadRigh
           {runheadRight ? <span>{runheadRight}</span> : null}
         </p>
       ) : null}
-      <h1 class={quietTitle ? 'screen-title visually-hidden' : 'screen-title'} tabIndex={-1} ref={heading}>
-        {title}
-      </h1>
+      {isRoot ? (
+        <h1 class={quietTitle ? 'screen-title visually-hidden' : 'screen-title big'} tabIndex={-1} ref={heading}>
+          {title}
+        </h1>
+      ) : null}
       <main>{children}</main>
     </div>
   );

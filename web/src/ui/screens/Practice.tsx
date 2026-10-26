@@ -6,8 +6,69 @@ import { openRound, openReveal, shortDate } from '../actions';
 import { Screen } from '../components/Screen';
 import { Announcer } from '../components/BottomBar';
 import { Button, LinkButton } from '../components/Button';
+import { GameIcon } from '../components/GameIcon';
 import { Icon } from '../components/Icons';
+import { MascotSays } from '../components/MascotSays';
+import { buzz } from '../components/feedback';
 import { PRACTICE_EMPTY } from '../../engine/api';
+import type { ListEntry } from '../../engine/api';
+import type { RoundMode } from '../../engine/types';
+import '../../styles/screens.css';
+
+/** One word in a Practice or Old Tech list: a status circle, the word or date, and a note. */
+export function WordRow({
+  entry,
+  title,
+  note,
+  mode,
+}: {
+  entry: ListEntry;
+  title?: string;
+  note: string;
+  mode: RoundMode;
+}) {
+  let kind = 'is-open';
+  if (entry.finished) kind = 'is-done';
+  if (!entry.open) kind = 'is-locked';
+  const mark = (
+    <span class="word-mark" aria-hidden="true">
+      {entry.finished ? <Icon name="check" /> : entry.open ? <GameIcon name="play" size={20} /> : <Icon name="lock" />}
+    </span>
+  );
+  if (!entry.open) {
+    return (
+      <div class={'word-row ' + kind} aria-disabled="true">
+        {mark}
+        <span class="word-main">
+          <span class="word-title">{title || entry.label}</span>
+          <span class="word-note">{note}</span>
+        </span>
+      </div>
+    );
+  }
+  return (
+    <a
+      class={'word-row ' + kind}
+      href={hrefFor('play', entry.key)}
+      onClick={(event) => {
+        event.preventDefault();
+        buzz();
+        if (entry.finished) openReveal(entry.key);
+        else openRound(entry.key, entry.itemId, mode);
+      }}
+    >
+      {mark}
+      <span class="word-main">
+        <span class="word-title">{title || entry.label}</span>
+        {note ? <span class="word-note">{note}</span> : null}
+      </span>
+      {entry.finished ? <span class="visually-hidden">Done</span> : null}
+      <span class="word-go" aria-hidden="true">
+        <GameIcon name="chevron" size={20} />
+      </span>
+    </a>
+  );
+}
 
 export function PracticeScreen() {
   const app = useApp();
@@ -21,61 +82,36 @@ export function PracticeScreen() {
   }
   return (
     <Screen title="Practice">
-      {entries.length ? (
-        <ul class="rows">
-          {entries.map((entry) => (
-            <li key={entry.key}>
-              {entry.open ? (
-                <a
-                  class="row-link"
-                  href={hrefFor('play', entry.key)}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    if (entry.finished) openReveal(entry.key);
-                    else openRound(entry.key, entry.itemId, 'practice');
-                  }}
-                >
-                  <span class="main">
-                    <span class="title">{entry.label}</span>
-                    <span class="note">{entry.date ? shortDate(entry.date) : ''}</span>
-                  </span>
-                  {entry.finished ? (
-                    <span class="mark">
-                      <Icon name="check" />
-                    </span>
-                  ) : null}
-                </a>
-              ) : (
-                <div class="row-link" aria-disabled="true">
-                  <span class="main">
-                    <span class="title">{entry.label}</span>
-                    <span class="note">{entry.lockLine}</span>
-                  </span>
-                  {entry.finished ? (
-                    <span class="mark">
-                      <Icon name="check" />
-                    </span>
-                  ) : null}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>{PRACTICE_EMPTY}</p>
-      )}
-      {message ? (
-        <div class="note-box">
-          <p>{message}</p>
-          <Button onClick={() => goBack()}>Back</Button>
-        </div>
-      ) : null}
-      <div class="stack-sm">
-        <Button primary block onClick={next}>
+      <div class="words stack">
+        <MascotSays who="bud" pose="wave" text="Pick a past word to play again, or tap Next word." />
+        <Button primary big block onClick={next}>
           Next word
         </Button>
-        <LinkButton block href={hrefFor('home')}>
-          Home
+        {message ? (
+          <div class="soft-note stack-sm">
+            <p>{message}</p>
+            <Button small onClick={() => goBack()}>
+              Back
+            </Button>
+          </div>
+        ) : null}
+        {entries.length ? (
+          <ul class="word-list">
+            {entries.map((entry) => (
+              <li key={entry.key}>
+                <WordRow
+                  entry={entry}
+                  mode="practice"
+                  note={entry.open ? (entry.date ? shortDate(entry.date) : '') : entry.lockLine || ''}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="soft-note">{PRACTICE_EMPTY}</p>
+        )}
+        <LinkButton block variant="ghost" href={hrefFor('learn')}>
+          Back to Learn
         </LinkButton>
       </div>
       <Announcer message={message || ''} />

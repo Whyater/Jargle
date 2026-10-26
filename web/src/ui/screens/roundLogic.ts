@@ -57,3 +57,25 @@ export function canPlayAgain(key: string, mode: RoundMode, todayNumber: number):
   if (key.indexOf('d:') === 0) return Number(key.slice(2)) < todayNumber;
   return false;
 }
+
+/** XP each round earned when it ended on this visit, shown on the reveal. */
+export const xpByRound = new Map<string, number>();
+
+/** Rounds that ended on this visit. Only these get the confetti on the reveal. */
+export const justEnded = new Set<string>();
+
+/** The big happy line on the reveal. */
+export function cheerLine(status: string): string {
+  return status === 'solved' ? 'You got it!' : 'Good try!';
+}
+
+/**
+ * Splits "6 bars left. An extra clue costs 1." into the count part and the rules part.
+ * The big number already shows the count, so only the rules are shown; the count stays
+ * in the line for screen readers.
+ */
+export function splitBatteryLine(line: string): { count: string; rules: string } {
+  const cut = line.indexOf('. ');
+  if (cut === -1) return { count: line, rules: '' };
+  return { count: line.slice(0, cut + 1), rules: line.slice(cut + 2) };
+}

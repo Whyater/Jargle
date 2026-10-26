@@ -121,8 +121,8 @@ it("does not count non-daily keys", () => {
 });
 
 it("uses the fall-back clock dates as consecutive days", () => {
-  expect(dayNumber("2026-11-01")).toBe(7);
-  expect(dayNumber("2026-11-02")).toBe(8);
+  expect(dayNumber("2026-11-01")).toBe(8);
+  expect(dayNumber("2026-11-02")).toBe(9);
 });
 
 it("does not mark a single missed day as a streak break", () => {

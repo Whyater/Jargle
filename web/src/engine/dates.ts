@@ -5,8 +5,8 @@
 
 import type { LocalDate } from './types';
 
-/** Day 1 is Mon Oct 26, 2026. */
-export const LAUNCH_DATE: LocalDate = '2026-10-26';
+/** Day 1 is Sun Oct 25, 2026. */
+export const LAUNCH_DATE: LocalDate = '2026-10-25';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

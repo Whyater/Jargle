@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { canPlayAgain, shouldIgnoreNextClue, stripTextAfterTap, tallestMessage } from './roundLogic';
+import {
+  canPlayAgain,
+  cheerLine,
+  shouldIgnoreNextClue,
+  splitBatteryLine,
+  stripTextAfterTap,
+  tallestMessage,
+} from './roundLogic';
 import type { ContentBundle } from '../../engine/types';
 
 function contentWithMissLines(): ContentBundle {
@@ -97,5 +104,29 @@ describe('canPlayAgain', () => {
   it("never allows today's daily or Pass the Phone", () => {
     expect(canPlayAgain('d:12', 'daily', 12)).toBe(false);
     expect(canPlayAgain('ptp:1:2', 'ptp', 12)).toBe(false);
+  });
+});
+
+describe('cheerLine', () => {
+  it('uses the solved message only for solved rounds', () => {
+    expect(cheerLine('solved')).toBe('You got it!');
+    expect(cheerLine('learned')).toBe('Good try!');
+  });
+});
+
+describe('splitBatteryLine', () => {
+  it('splits the count from the rules', () => {
+    expect(splitBatteryLine('6 bars left. An extra clue costs 1. A wrong guess costs 3.')).toEqual({
+      count: '6 bars left.',
+      rules: 'An extra clue costs 1. A wrong guess costs 3.',
+    });
+  });
+
+  it('keeps a line with no rules as the count', () => {
+    expect(splitBatteryLine('2 bars left.')).toEqual({ count: '2 bars left.', rules: '' });
+  });
+
+  it('works for one bar', () => {
+    expect(splitBatteryLine('1 bar left. A wrong guess costs 3.').rules).toBe('A wrong guess costs 3.');
   });
 });

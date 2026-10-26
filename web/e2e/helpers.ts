@@ -1,7 +1,9 @@
+import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 export interface Viewport { name: string; width: number; height: number }
 
+// The spec's phone, landscape and desktop sizes.
 export const VIEWPORTS: Viewport[] = [
   { name: '320x480', width: 320, height: 480 },
   { name: '320x568', width: 320, height: 568 },
@@ -12,160 +14,235 @@ export const VIEWPORTS: Viewport[] = [
   { name: '1280x800', width: 1280, height: 800 },
 ];
 
-export interface ScreenInfo { name: string; hash: string }
-
-export const SCREENS: ScreenInfo[] = [
-  { name: 'home', hash: '#/' },
-  { name: 'settings', hash: '#/settings' },
-  { name: 'how', hash: '#/how' },
-  { name: 'about', hash: '#/about' },
-  { name: 'review', hash: '#/review' },
-  { name: 'learn', hash: '#/learn' },
-  { name: 'practice', hash: '#/practice' },
-  { name: 'oldtech', hash: '#/oldtech' },
-  { name: 'ptp', hash: '#/ptp' },
-  { name: 'badges', hash: '#/badges' },
-  { name: 'code', hash: '#/code' },
-  { name: 'codeUse', hash: '#/code/use' },
-  { name: 'get', hash: '#/get' },
-  { name: 'notFound', hash: '#/no-such-page' },
-];
+// The size most flow tests run at.
+export const PHONE = { width: 375, height: 667 };
 
 export type TextSize = 'Normal' | 'Large' | 'Largest';
 
+// localStorage keys the app uses outside the main save.
+export const INTRO_KEY = 'jargle:introSeen';
+export const LEVEL_KEY = 'jargle:seenLevel';
+
+/** Waits until the app has loaded its content and drawn a screen heading. */
 export async function waitForReady(page: Page): Promise<void> {
   await page.locator('#root [aria-busy="true"]').waitFor({ state: 'detached' });
-  await page.locator('#root h1').first().waitFor({ state: 'visible' });
+  // Tab roots keep their h1 visually hidden, so only wait for it to exist.
+  await page.locator('#root h1').first().waitFor({ state: 'attached' });
 }
 
+/**
+ * Opens the real app (not a demo). Every test gets a new browser context, so the save starts
+ * empty. By default the first-run intro is marked as seen so the test lands straight on Play.
+ * Pass intro: true to see the intro.
+ */
+export async function openFresh(page: Page, options: { intro?: boolean; hash?: string } = {}): Promise<void> {
+  if (!options.intro) {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('jargle:introSeen', '1');
+    });
+  }
+  await page.goto('/' + (options.hash || '#/'));
+  await waitForReady(page);
+}
+
+/** Opens a demo save ('judge' has 8 days of history, 'new' is a new player). */
 export async function openDemo(page: Page, demo: 'judge' | 'new', hash = '#/'): Promise<void> {
   await page.goto(`/?demo=${demo}${hash}`);
   await waitForReady(page);
 }
 
-export async function goToHash(page: Page, hash: string): Promise<void> {
+/**
+ * Changes the hash in place (no reload) and waits for the new screen. Pass the screen's h1 text
+ * to prove the right screen opened: the old screen's h1 would satisfy a plain wait.
+ */
+export async function goToHash(page: Page, hash: string, heading?: string): Promise<void> {
   await page.evaluate((nextHash) => {
     window.location.hash = nextHash;
   }, hash);
   await waitForReady(page);
+  if (heading) {
+    await expect(page.getByRole('heading', { level: 1, name: heading, exact: true })).toBeAttached();
+  }
 }
 
+/** Taps one of the bottom tabs: Play, Learn or Me. */
+export async function openTab(page: Page, name: 'Play' | 'Learn' | 'Me'): Promise<void> {
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name, exact: true }).click();
+  await waitForReady(page);
+}
+
+/** Picks a text size in the Me tab's settings, then goes back to Play. */
 export async function setTextSize(page: Page, size: TextSize): Promise<void> {
-  if (size !== 'Normal') {
-    await goToHash(page, '#/settings');
-    const button = page.getByRole('button', { name: size, exact: true });
-    await button.click();
-    await button.waitFor({ state: 'visible' });
-    await page.locator(`button[aria-pressed="true"]`).filter({ hasText: size }).waitFor();
-  }
+  await goToHash(page, '#/me');
+  const group = page.getByRole('group', { name: 'Text size' });
+  const button = group.getByRole('button', { name: size, exact: true });
+  await button.click();
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
   await goToHash(page, '#/');
 }
 
-export async function startTodaysRound(page: Page): Promise<void> {
-  const start = page.getByRole('button', { name: /^(Play today's word|Continue)$/ });
-  if (await start.count()) await start.first().click();
-  else await page.getByRole('link', { name: /^(Play today's word|Continue)$/ }).first().click();
-  await page.getByRole('button', { name: 'Check', exact: true }).waitFor({ state: 'visible' });
+/** Today's date as the page sees it, like 2026-10-28. */
+export async function pageToday(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${month}-${day}`;
+  });
 }
 
+// Just the parts of content/bundle.json the tests read.
+export interface BundleItem {
+  term: string;
+  meaning: string;
+  old_tech?: boolean;
+  clues: string[];
+  decoys: { term: string; meaning: string }[];
+}
+
+export interface Bundle {
+  items: Record<string, BundleItem>;
+  schedule: { days: { date: string; term: string }[] };
+  lessons: unknown[];
+}
+
+/** Downloads the same content bundle the app plays with, so tests can know the right answers. */
+export async function loadBundle(page: Page): Promise<Bundle> {
+  const response = await page.request.get('/content/bundle.json');
+  expect(response.ok()).toBe(true);
+  return (await response.json()) as Bundle;
+}
+
+/** Finds a content item by its term (the word players guess). */
+export function itemByTerm(bundle: Bundle, term: string): BundleItem | null {
+  for (const id of Object.keys(bundle.items)) {
+    if (bundle.items[id].term === term) return bundle.items[id];
+  }
+  return null;
+}
+
+/**
+ * Fails when the page scrolls sideways, or when any visible text is drawn past the left or right
+ * edge. The second check catches text that a fixed bar or an overflow:hidden box cuts off, which
+ * never makes the page wider.
+ */
 export async function expectNoHorizontalScroll(page: Page): Promise<void> {
   const details = await page.evaluate(() => {
     const viewport = window.innerWidth;
     const width = document.documentElement.scrollWidth;
-    const items = Array.from(document.querySelectorAll<HTMLElement>('*'))
-      .map((element) => {
-        const rect = element.getBoundingClientRect();
-        return {
-          element,
-          right: rect.right,
-          depth: (() => {
-            let count = 0;
-            let current: HTMLElement | null = element;
-            while (current) {
-              count += 1;
-              current = current.parentElement;
+    const outside: string[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node && outside.length < 5) {
+      const text = (node.textContent || '').trim();
+      const owner = node.parentElement;
+      if (text && owner && !owner.closest('.visually-hidden, script, style')) {
+        let hidden = false;
+        let current: Element | null = owner;
+        while (current && current !== document.body) {
+          const style = getComputedStyle(current);
+          if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) hidden = true;
+          current = current.parentElement;
+        }
+        if (!hidden) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const rect of Array.from(range.getClientRects())) {
+            if (rect.width < 1 || rect.height < 1) continue;
+            if (rect.right > viewport + 1 || rect.left < -1) {
+              const className = typeof owner.className === 'string' ? owner.className : '';
+              outside.push(`<${owner.tagName.toLowerCase()}> class="${className}" '${text.slice(0, 40)}' left=${Math.round(rect.left)} right=${Math.round(rect.right)}`);
+              break;
             }
-            return count;
-          })(),
-        };
-      })
-      .filter(({ element, right }) => {
-        const style = getComputedStyle(element);
-        return right > viewport + 1 && element.getClientRects().length > 0 && style.display !== 'none' && style.visibility !== 'hidden';
-      })
-      .sort((a, b) => b.depth - a.depth || b.right - a.right)
-      .slice(0, 5)
-      .map(({ element, right }) => {
-        const text = element.textContent?.trim().replace(/\s+/g, ' ').slice(0, 40) || '';
-        const className = typeof element.className === 'string' ? element.className : '';
-        return `<${element.tagName.toLowerCase()}> class="${className}" '${text}' right=${Math.round(right)}`;
-      });
-    return { viewport, width, items };
+          }
+        }
+      }
+      node = walker.nextNode();
+    }
+    return { viewport, width, outside };
   });
-  if (details.width > details.viewport) {
-    const causes = details.items.length > 0 ? details.items.join('; ') : 'no visible element identified';
-    throw new Error(`horizontal scroll ${details.width} > ${details.viewport}: ${causes}`);
+  if (details.width > details.viewport || details.outside.length > 0) {
+    const causes = details.outside.length > 0 ? details.outside.join('; ') : 'no visible text identified';
+    throw new Error(`horizontal scroll or cut-off text (page ${details.width} wide, screen ${details.viewport}): ${causes}`);
   }
 }
 
-export async function findClippedText(page: Page): Promise<string[]> {
+/**
+ * Lists pairs of visible text runs that sit on top of each other. Each text node is measured
+ * with a Range, so long blocks are judged by their real lines and not their full box.
+ * Text in fixed or sticky bars is compared only with other bar text, because the page content
+ * scrolls under those bars on purpose. If almost no text was measured, that is reported too,
+ * so a broken check cannot pass by measuring nothing.
+ */
+export async function findOverlappingText(page: Page): Promise<string[]> {
   return page.evaluate(() => {
-    const clipped: string[] = [];
-    const elements = Array.from(document.querySelectorAll<HTMLElement>('*'));
-    for (const element of elements) {
-      if (!element.offsetParent && element !== document.body) continue;
-      if (element.closest('.visually-hidden, [aria-hidden="true"]')) continue;
-      const style = getComputedStyle(element);
-      const hidesOverflow = ['hidden', 'clip'].includes(style.overflowX) || ['hidden', 'clip'].includes(style.overflowY) || style.textOverflow === 'ellipsis';
-      const hasOverflow = element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1;
-      if (hidesOverflow && hasOverflow && element.textContent?.trim()) {
-        clipped.push(`<${element.tagName.toLowerCase()}> '${element.textContent.trim().slice(0, 40)}'`);
+    interface Run { text: string; rects: DOMRect[]; pinned: boolean }
+    const runs: Run[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node) {
+      const text = (node.textContent || '').trim();
+      const owner = node.parentElement;
+      if (text && owner && !owner.closest('.visually-hidden, script, style, svg')) {
+        let hidden = false;
+        let pinned = false;
+        let current: Element | null = owner;
+        while (current && current !== document.body) {
+          const style = getComputedStyle(current);
+          if (style.position === 'fixed' || style.position === 'sticky') pinned = true;
+          if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) hidden = true;
+          current = current.parentElement;
+        }
+        if (!hidden) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 1 && rect.height > 1);
+          if (rects.length > 0) runs.push({ text: text.slice(0, 30), rects, pinned });
+        }
+      }
+      node = walker.nextNode();
+    }
+    const problems: string[] = [];
+    if (runs.length < 3) problems.push(`only ${runs.length} text runs were measured`);
+    for (let i = 0; i < runs.length; i += 1) {
+      for (let j = i + 1; j < runs.length; j += 1) {
+        if (runs[i].pinned !== runs[j].pinned) continue;
+        let hit = false;
+        for (const a of runs[i].rects) {
+          for (const b of runs[j].rects) {
+            // A text box runs from the font's top to its bottom, which is taller than the letters
+            // (very tall for big score numbers). Trim it to roughly where the letters are drawn.
+            const aTop = a.top + a.height * 0.2;
+            const aBottom = a.bottom - a.height * 0.15;
+            const bTop = b.top + b.height * 0.2;
+            const bBottom = b.bottom - b.height * 0.15;
+            const across = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+            const down = Math.min(aBottom, bBottom) - Math.max(aTop, bTop);
+            if (across > 3 && down > 2) hit = true;
+          }
+        }
+        if (hit) problems.push(`'${runs[i].text}' overlaps '${runs[j].text}'`);
+        if (problems.length >= 8) return problems;
       }
     }
-    return clipped;
+    return problems;
   });
 }
 
-export async function findButtonsNotReachedByTab(page: Page): Promise<string[]> {
-  const names = await page.evaluate(() => {
-    const items = Array.from(document.querySelectorAll<HTMLElement>('button, a, [role="button"], input, select, textarea'));
-    return items.filter((item) => {
-      const style = getComputedStyle(item);
-      return style.display !== 'none' && style.visibility !== 'hidden' && item.getClientRects().length > 0 && !(item instanceof HTMLButtonElement && item.disabled);
-    }).map((item) => item.getAttribute('aria-label') || item.textContent?.trim() || item.tagName.toLowerCase());
-  });
-  await page.evaluate(() => {
-    (document.activeElement as HTMLElement | null)?.blur();
-    window.scrollTo(0, 0);
-  });
-  const reached = new Set<string>();
-  const limit = names.length * 2 + 10;
-  for (let i = 0; i < limit; i += 1) {
-    await page.keyboard.press('Tab');
-    const name = await page.evaluate(() => {
-      const item = document.activeElement as HTMLElement | null;
-      if (!item || !item.matches('button, a, [role="button"], input, select, textarea')) return '';
-      return item.getAttribute('aria-label') || item.textContent?.trim() || item.tagName.toLowerCase();
-    });
-    if (name) reached.add(name);
+/** Waits for running CSS animations to finish (up to 3 s) so a layout check is not mid-flip. */
+export async function waitForAnimations(page: Page): Promise<void> {
+  try {
+    await page.waitForFunction(() => {
+      const animations = document.getAnimations ? document.getAnimations() : [];
+      return animations.every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity);
+    }, undefined, { timeout: 3000 });
+  } catch (_error) {
+    // Measure anyway, but leave a note in the report so a mid-animation result can be spotted.
+    console.log(`animations still running after 3 s on ${page.url()}`);
   }
-  return names.filter((name) => !reached.has(name));
 }
 
-export async function isBottomBarPinned(page: Page): Promise<boolean> {
-  return page.evaluate(() => {
-    const check = Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Check');
-    if (!check) return false;
-    let element: HTMLElement | null = check;
-    while (element) {
-      const position = getComputedStyle(element).position;
-      if (position === 'fixed' || position === 'sticky') return true;
-      element = element.parentElement;
-    }
-    return false;
-  });
-}
-
+/** Saves a full-page screenshot into the CI artifact folder. */
 export async function saveScreen(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `e2e/.output/screens/${name}.png`, fullPage: true });
 }

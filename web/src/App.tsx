@@ -1,6 +1,6 @@
 import { useEffect, useErrorBoundary, useState } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
-import { useRoute } from './ui/router';
+import { tabForRoute, useRoute } from './ui/router';
 import { useApp, initApp } from './ui/store';
 import { Button } from './ui/components/Button';
 import { HomeScreen } from './ui/screens/Home';
@@ -18,10 +18,25 @@ import { AboutScreen } from './ui/screens/About';
 import { GetCodeScreen, UseCodeScreen } from './ui/screens/ProgressCode';
 import { GetJargleScreen } from './ui/screens/GetJargle';
 import { NotFoundScreen } from './ui/screens/NotFound';
+import { MeScreen } from './ui/screens/Me';
+import { EndlessScreen } from './ui/screens/Endless';
+import { TabBar } from './ui/components/TabBar';
+import { ToastHost } from './ui/components/Toast';
 
 export default function App() {
   const route = useRoute();
-  return <ScreenGuard key={route.name + ':' + (route.param || '')} />;
+  const tab = tabForRoute(route.name);
+  // The body class reserves room at the bottom of the page for the fixed tab bar.
+  useEffect(() => {
+    document.body.classList.toggle('has-tabs', tab !== null);
+  }, [tab]);
+  return (
+    <>
+      <ScreenGuard key={route.name + ':' + (route.param || '')} />
+      {tab ? <TabBar active={tab} /> : null}
+      <ToastHost />
+    </>
+  );
 }
 
 // If a screen throws, show a way home instead of a blank page.
@@ -84,6 +99,10 @@ function Routes() {
       return <BadgesScreen />;
     case 'settings':
       return <SettingsScreen />;
+    case 'me':
+      return <MeScreen />;
+    case 'endless':
+      return <EndlessScreen />;
     case 'how':
       return <HowToPlayScreen />;
     case 'code':

@@ -1,48 +1,53 @@
 import { LinkButton } from '../components/Button';
 import { Screen } from '../components/Screen';
+import { Mascot } from '../components/Mascot';
 import { sourceUrl } from '../../config';
+import './round.css';
+import '../../styles/screens.css';
 
 export function AboutScreen() {
   return (
     <Screen title="About this app">
-      <div class="stack-lg">
-        <section class="stack-sm">
-          <h2>What Jargle is</h2>
+      <div class="about stack-lg">
+        <div class="about-hero">
+          <div class="win-mascots">
+            <Mascot who="floyd" size={72} pose="wave" />
+            <Mascot who="bud" size={72} pose="happy" />
+          </div>
           <p>
-            Jargle is a daily word game for tech words. You guess the word from clues and four answer cards. A
-            wrong guess flips over and shows what that word means, so a miss still teaches you something.
+            Jargle is a daily word game for tech words. You guess the word from clues and four answer cards. A wrong
+            guess flips over and shows what that word means, so a miss still teaches you something.
           </p>
+          <p class="about-maker">Made by Abyan.</p>
+        </div>
+
+        <section class="about-card stack-sm">
+          <h2>Where the words come from</h2>
+          <p>
+            Every word lists the sources it is based on under "Where this comes from." Abyan is still checking every word
+            by hand. If you spot a mistake, tap "Something wrong? Tell us" under that word.
+          </p>
+          <p>The app makes its own sounds as you play, so there are no sound files to download.</p>
         </section>
 
-        <section class="stack-sm">
-          <h2>How it was made</h2>
-          <p>
-            Floyd, Bud, the badges and the app icon are drawings made as code with the same tools. The sounds
-            are made inside the app with the Web Audio API, so there are no sound files.
-          </p>
-        </section>
-
-        <section class="stack-sm">
+        <section class="about-card stack-sm">
           <h2>Your privacy</h2>
           <p>
-            No accounts, no ads, no tracking. Your progress stays on this device. The app has no AI features
-            while you play: every clue and answer is fixed text.
+            No accounts, no ads, no tracking. Your progress stays on this device. Every clue and answer is fixed
+            text that ships with the app.
           </p>
         </section>
 
-        <section class="stack-sm">
+        <section class="about-card stack-sm">
           <h2>Fonts and libraries</h2>
           <ul class="plain-list">
-            <li>
-              Atkinson Hyperlegible Next, by the Braille Institute (SIL Open Font License 1.1)
-            </li>
-            <li>Young Serif, by Bastien Sozeau (SIL Open Font License 1.1)</li>
+            <li>Fredoka, by the Fredoka Project Authors (SIL Open Font License 1.1)</li>
             <li>Preact (MIT License)</li>
             <li>Vite, the build tool (MIT License)</li>
           </ul>
         </section>
 
-        <section class="stack-sm">
+        <section class="about-card stack-sm">
           <h2>Source code</h2>
           <p>
             <a class="link" href={sourceUrl} target="_blank" rel="noopener">

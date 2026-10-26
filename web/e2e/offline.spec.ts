@@ -1,57 +1,38 @@
 import { expect, test } from '@playwright/test';
-import { openDemo, startTodaysRound, waitForReady } from './helpers';
+import type { Page } from '@playwright/test';
+import { PHONE, openFresh, waitForReady } from './helpers';
 
-type OfflinePage = Parameters<typeof openDemo>[0];
+test.use({ viewport: PHONE });
 
-function collectOfflineDiagnostics(page: OfflinePage): string[] {
-  const diagnostics: string[] = [];
+/** Collects errors and failed requests, so an offline failure says what went wrong. */
+function collectDiagnostics(page: Page): string[] {
+  const lines: string[] = [];
   page.on('console', (message) => {
-    if (message.type() === 'error') diagnostics.push(`[console error] ${message.text()}`);
+    if (message.type() === 'error') {
+      lines.push(`[console error] ${message.text()}`);
+    }
   });
   page.on('pageerror', (error) => {
-    diagnostics.push(`[pageerror] ${error.message}`);
+    lines.push(`[pageerror] ${error.message}`);
   });
   page.on('requestfailed', (request) => {
-    diagnostics.push(`[requestfailed] ${request.url()} ${request.failure()?.errorText || 'unknown failure'}`);
+    lines.push(`[requestfailed] ${request.url()} ${request.failure()?.errorText || 'unknown'}`);
   });
-  page.on('response', (response) => {
-    if (response.url().includes('/assets/')) {
-      diagnostics.push(`[asset response] ${response.status()} ${response.url()} fromServiceWorker=${response.fromServiceWorker()}`);
-    }
-  });
-  return diagnostics;
+  return lines;
 }
 
-async function expectModuleScriptCached(page: OfflinePage): Promise<void> {
-  const result = await page.evaluate(async () => {
-    const script = document.querySelector<HTMLScriptElement>('script[type="module"][src]');
-    const scriptUrl = script?.src || '(no module script found)';
-    if (!script) return { scriptUrl, cached: false };
-    const cacheNames = await caches.keys();
-    for (const cacheName of cacheNames) {
-      const cache = await caches.open(cacheName);
-      if (await cache.match(script.src)) return { scriptUrl, cached: true };
-    }
-    return { scriptUrl, cached: false };
-  });
-  expect(result.cached, `module script ${result.scriptUrl} is not present in Cache Storage`).toBe(true);
+function diagnosticText(lines: string[]): string {
+  if (lines.length === 0) return '(no diagnostics captured)';
+  return lines.slice(0, 15).join('\n');
 }
 
-function diagnosticText(diagnostics: string[]): string {
-  if (diagnostics.length === 0) return '(no diagnostics captured)';
-  return diagnostics
-    .slice(0, 15)
-    .map((line) => line.replace(/\s+/g, ' ').trim().slice(0, 240))
-    .join('\n');
-}
-
-async function prepareServiceWorker(page: Parameters<typeof openDemo>[0]): Promise<void> {
+/** Waits until the service worker controls the page and has cached the app shell and the words. */
+async function prepareServiceWorker(page: Page): Promise<void> {
   await page.evaluate(() => navigator.serviceWorker.ready);
+  // The first load is not controlled yet; after a reload it is.
   await page.reload();
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null, undefined, { timeout: 15000 });
   await page.waitForFunction(async () => {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    if (registrations.length === 0) return false;
     const keys = await caches.keys();
     const cacheName = keys.find((key) => key.indexOf('jargle-') === 0);
     if (!cacheName) return false;
@@ -62,54 +43,87 @@ async function prepareServiceWorker(page: Parameters<typeof openDemo>[0]): Promi
   });
 }
 
-// Waits for a real screen; if none shows, the error includes what the page did show.
-async function waitForOfflineScreen(page: OfflinePage, diagnostics: string[]): Promise<void> {
+/** The app's own script must be cached too, or an offline reload shows a blank page. */
+async function expectModuleScriptCached(page: Page): Promise<void> {
+  const result = await page.evaluate(async () => {
+    const script = document.querySelector<HTMLScriptElement>('script[type="module"][src]');
+    if (!script) return { url: '(missing module script)', cached: false };
+    const names = await caches.keys();
+    for (const name of names) {
+      const cache = await caches.open(name);
+      if (await cache.match(script.src)) return { url: script.src, cached: true };
+    }
+    return { url: script.src, cached: false };
+  });
+  expect(result.cached, `module script ${result.url} is not cached`).toBe(true);
+}
+
+async function waitForOfflineScreen(page: Page, lines: string[]): Promise<void> {
   try {
     await waitForReady(page);
   } catch (error) {
-    const text = await page.evaluate(() => document.body.innerText.slice(0, 200)).catch(() => '(no page)');
-    throw new Error(`no screen loaded offline. Page text: ${text}\nDiagnostics:\n${diagnosticText(diagnostics)}`);
+    const body = await page.evaluate(() => document.body.innerText.slice(0, 300)).catch(() => '(no page)');
+    throw new Error(`offline screen did not load: ${body}\n${error}\nDiagnostics:\n${diagnosticText(lines)}`);
   }
 }
 
-test.describe('offline app shell', () => {
-  test('judge demo loads and plays offline', async ({ page, context }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
-    await openDemo(page, 'judge');
+test.describe('offline', () => {
+  // The service worker can take up to 15 s to take control, so allow more than the default.
+  test.describe.configure({ timeout: 60000 });
+
+  test('a cached app reloads Play offline and Endless still works', async ({ page, context }) => {
+    await openFresh(page);
     await prepareServiceWorker(page);
-    const diagnostics = collectOfflineDiagnostics(page);
+    const lines = collectDiagnostics(page);
     await expectModuleScriptCached(page);
 
     await context.setOffline(true);
     try {
-      await page.reload();
-      await waitForOfflineScreen(page, diagnostics);
-      await expect(page.getByText(/^Days learned:/).first()).toBeVisible();
-      await expect(page.getByRole('button', { name: "Play today's word", exact: true })).toBeVisible();
-      await startTodaysRound(page);
-      await page.getByRole('button', { name: /Claude/ }).click();
-      await page.getByRole('button', { name: 'Check', exact: true }).click();
-      await expect(page.getByText(/^You learned Claude\. Solved with \d+ bars? left\.$/)).toBeVisible();
+      const response = await page.reload();
+      // Offline, only the service worker can answer the reload.
+      expect(response?.fromServiceWorker()).toBe(true);
+      await waitForOfflineScreen(page, lines);
+      const endlessLink = page.getByRole('link', { name: 'Play Endless', exact: true });
+      await expect(endlessLink).toBeVisible();
+      await endlessLink.click();
+      await expect(page.getByRole('heading', { name: 'Endless', exact: true })).toBeVisible();
+      await page.getByRole('button', { name: 'Start', exact: true }).click();
+      const firstOption = page.locator('[data-option]').first();
+      await expect(firstOption).toBeVisible();
+      await firstOption.click();
+      // Any answer locks the options, which shows the run took the answer while offline.
+      // (A right answer moves on after about 900 ms, so check right away.)
+      await expect(page.locator('[data-option][aria-disabled="true"]').first()).toBeAttached();
+    } catch (error) {
+      throw new Error(`${error}\nDiagnostics:\n${diagnosticText(lines)}`);
     } finally {
       await context.setOffline(false);
     }
   });
 
-  test('new demo home and round open offline', async ({ page, context }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
-    await openDemo(page, 'new');
+  test('a daily round page reloads offline', async ({ page, context }) => {
+    await openFresh(page);
     await prepareServiceWorker(page);
-    const diagnostics = collectOfflineDiagnostics(page);
+    const lines = collectDiagnostics(page);
     await expectModuleScriptCached(page);
+
+    const wordCard = page.getByRole('region', { name: 'Word of the Day' });
+    await wordCard.getByRole('button', { name: 'Play', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Check', exact: true })).toBeVisible();
+    const dailyUrl = page.url();
 
     await context.setOffline(true);
     try {
-      await page.reload();
-      await waitForOfflineScreen(page, diagnostics);
-      await startTodaysRound(page);
+      await page.goto(dailyUrl);
+      // Going to the same URL only changes the hash, so reload to load the page again from the cache.
+      const response = await page.reload();
+      expect(response?.fromServiceWorker()).toBe(true);
+      await waitForOfflineScreen(page, lines);
+      await expect(page.getByRole('button', { name: 'Check', exact: true })).toBeVisible();
+    } catch (error) {
+      throw new Error(`${error}\nDiagnostics:\n${diagnosticText(lines)}`);
     } finally {
       await context.setOffline(false);
     }
   });
 });
-

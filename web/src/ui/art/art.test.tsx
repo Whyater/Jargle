@@ -21,6 +21,11 @@ function renderArt(node: ComponentChildren) {
   const container = document.createElement('div');
   document.body.appendChild(container);
   render(node, container);
+  return container;
+}
+
+function renderSvg(node: ComponentChildren) {
+  const container = renderArt(node);
   const svg = container.querySelector('svg');
   expect(svg).not.toBeNull();
   return svg as SVGSVGElement;
@@ -32,82 +37,88 @@ afterEach(() => {
 
 describe('Floyd', () => {
   it('uses a default size of 96 and accepts a custom size', () => {
-    const defaultSvg = renderArt(<Floyd />);
-    expect(defaultSvg.getAttribute('width')).toBe('96');
-    expect(defaultSvg.getAttribute('height')).toBe('96');
+    const defaultContainer = renderArt(<Floyd />);
+    const defaultMascot = defaultContainer.querySelector('.mascot');
+    const defaultImg = defaultContainer.querySelector('.mascot-img');
+    expect(defaultMascot?.getAttribute('style')).toContain('width: 96px');
+    expect(defaultMascot?.getAttribute('style')).toContain('height: 96px');
+    expect(defaultImg?.getAttribute('width')).toBe('96');
+    expect(defaultImg?.getAttribute('height')).toBe('96');
 
-    const customSvg = renderArt(<Floyd size={128} />);
-    expect(customSvg.getAttribute('width')).toBe('128');
-    expect(customSvg.getAttribute('height')).toBe('128');
+    const customContainer = renderArt(<Floyd size={128} />);
+    const customMascot = customContainer.querySelector('.mascot');
+    const customImg = customContainer.querySelector('.mascot-img');
+    expect(customMascot?.getAttribute('style')).toContain('width: 128px');
+    expect(customMascot?.getAttribute('style')).toContain('height: 128px');
+    expect(customImg?.getAttribute('width')).toBe('128');
+    expect(customImg?.getAttribute('height')).toBe('128');
   });
 
   it('handles title, aria, and wiggle state', () => {
-    const titledSvg = renderArt(<Floyd title="Floyd" wiggle />);
-    expect(titledSvg.getAttribute('role')).toBe('img');
-    expect(titledSvg.hasAttribute('aria-hidden')).toBe(false);
-    expect(titledSvg.querySelector('title')?.textContent).toBe('Floyd');
-    expect(titledSvg.classList.contains('art-wiggle')).toBe(true);
+    const titled = renderArt(<Floyd title="Floyd" wiggle />).querySelector('.mascot');
+    expect(titled?.getAttribute('role')).toBe('img');
+    expect(titled?.getAttribute('aria-label')).toBe('Floyd');
+    expect(titled?.hasAttribute('aria-hidden')).toBe(false);
+    expect(titled?.classList.contains('art-wiggle')).toBe(true);
 
-    const plainSvg = renderArt(<Floyd />);
-    expect(plainSvg.getAttribute('aria-hidden')).toBe('true');
-    expect(plainSvg.hasAttribute('role')).toBe(false);
-    expect(plainSvg.classList.contains('art-wiggle')).toBe(false);
-  });
-
-  it('stays under the size budget', () => {
-    expect(renderArt(<Floyd />).outerHTML.length).toBeLessThan(4000);
+    const plain = renderArt(<Floyd />).querySelector('.mascot');
+    expect(plain?.getAttribute('aria-hidden')).toBe('true');
+    expect(plain?.hasAttribute('role')).toBe(false);
+    expect(plain?.classList.contains('art-wiggle')).toBe(false);
   });
 });
 
 describe('Bud', () => {
   it('uses a default size of 96 and accepts a custom size', () => {
-    const defaultSvg = renderArt(<Bud />);
-    expect(defaultSvg.getAttribute('width')).toBe('96');
-    expect(defaultSvg.getAttribute('height')).toBe('96');
+    const defaultContainer = renderArt(<Bud />);
+    const defaultMascot = defaultContainer.querySelector('.mascot');
+    const defaultImg = defaultContainer.querySelector('.mascot-img');
+    expect(defaultMascot?.getAttribute('style')).toContain('width: 96px');
+    expect(defaultMascot?.getAttribute('style')).toContain('height: 96px');
+    expect(defaultImg?.getAttribute('width')).toBe('96');
+    expect(defaultImg?.getAttribute('height')).toBe('96');
 
-    const customSvg = renderArt(<Bud size={128} />);
-    expect(customSvg.getAttribute('width')).toBe('128');
-    expect(customSvg.getAttribute('height')).toBe('128');
+    const customContainer = renderArt(<Bud size={128} />);
+    const customMascot = customContainer.querySelector('.mascot');
+    const customImg = customContainer.querySelector('.mascot-img');
+    expect(customMascot?.getAttribute('style')).toContain('width: 128px');
+    expect(customMascot?.getAttribute('style')).toContain('height: 128px');
+    expect(customImg?.getAttribute('width')).toBe('128');
+    expect(customImg?.getAttribute('height')).toBe('128');
   });
 
   it('handles title, aria, and wiggle state', () => {
-    const titledSvg = renderArt(<Bud title="Bud" wiggle />);
-    expect(titledSvg.getAttribute('role')).toBe('img');
-    expect(titledSvg.hasAttribute('aria-hidden')).toBe(false);
-    expect(titledSvg.querySelector('title')?.textContent).toBe('Bud');
-    expect(titledSvg.classList.contains('art-wiggle')).toBe(true);
+    const titled = renderArt(<Bud title="Bud" wiggle />).querySelector('.mascot');
+    expect(titled?.getAttribute('role')).toBe('img');
+    expect(titled?.getAttribute('aria-label')).toBe('Bud');
+    expect(titled?.hasAttribute('aria-hidden')).toBe(false);
+    expect(titled?.classList.contains('art-wiggle')).toBe(true);
 
-    const plainSvg = renderArt(<Bud />);
-    expect(plainSvg.getAttribute('aria-hidden')).toBe('true');
-    expect(plainSvg.hasAttribute('role')).toBe(false);
-    expect(plainSvg.classList.contains('art-wiggle')).toBe(false);
+    const plain = renderArt(<Bud />).querySelector('.mascot');
+    expect(plain?.getAttribute('aria-hidden')).toBe('true');
+    expect(plain?.hasAttribute('role')).toBe(false);
+    expect(plain?.classList.contains('art-wiggle')).toBe(false);
   });
 
   it.each([
-    ['idle', 'circle', '#1F3A68'],
-    ['happy', 'path', '#FFD23F'],
-    ['sympathetic', 'path', '#E08A1E'],
-  ] as const)('draws the %s mood with the expected color', (mood, tag, color) => {
-    const svg = renderArt(<Bud mood={mood as BudMood} />);
-    const shape = svg.querySelector(tag + '[fill="' + color + '"]');
-    expect(shape).not.toBeNull();
-
-    if (mood !== 'idle') {
-      expect(shape?.getAttribute('stroke')).not.toBe('none');
-      expect(svg.getAttribute('stroke')).toBe('#1F3A68');
-      expect(svg.getAttribute('stroke-width')).toBe('2');
-    }
+    ['idle', 'idle'],
+    ['happy', 'happy'],
+    ['sympathetic', 'oops'],
+  ] as const)('maps the %s mood to the %s pose', (mood, pose) => {
+    const image = renderArt(<Bud mood={mood as BudMood} />).querySelector('.mascot-img');
+    expect(image?.getAttribute('data-frame')).toBe(pose);
   });
 
-  it.each(['idle', 'happy', 'sympathetic'] as const)('stays under the size budget for %s', (mood) => {
-    expect(renderArt(<Bud mood={mood} />).outerHTML.length).toBeLessThan(4000);
+  it('lets an explicit pose override the mood', () => {
+    const image = renderArt(<Bud mood="happy" pose="think" />).querySelector('.mascot-img');
+    expect(image?.getAttribute('data-frame')).toBe('think');
   });
 });
 
 describe('Badge', () => {
   it.each(badgeIds)('%s renders earned and locked variants', (id) => {
-    const earnedSvg = renderArt(<Badge id={id} earned />);
-    const lockedSvg = renderArt(<Badge id={id} earned={false} />);
+    const earnedSvg = renderSvg(<Badge id={id} earned />);
+    const lockedSvg = renderSvg(<Badge id={id} earned={false} />);
 
     expect(earnedSvg.getAttribute('viewBox')).toBe('0 0 96 96');
     expect(lockedSvg.getAttribute('viewBox')).toBe('0 0 96 96');
@@ -117,33 +128,24 @@ describe('Badge', () => {
   });
 
   it('has the same title and aria behavior as the other art', () => {
-    const titledSvg = renderArt(<Badge id="first-word" earned title="First word" />);
+    const titledSvg = renderSvg(<Badge id="first-word" earned title="First word" />);
     expect(titledSvg.getAttribute('role')).toBe('img');
     expect(titledSvg.hasAttribute('aria-hidden')).toBe(false);
     expect(titledSvg.querySelector('title')?.textContent).toBe('First word');
 
-    const plainSvg = renderArt(<Badge id="first-word" earned={false} />);
+    const plainSvg = renderSvg(<Badge id="first-word" earned={false} />);
     expect(plainSvg.getAttribute('aria-hidden')).toBe('true');
     expect(plainSvg.hasAttribute('role')).toBe(false);
   });
 });
 
-describe('all rendered art', () => {
-  it('contains no filters, gradients, or text elements', () => {
-    const nodes = [
-      <Floyd key="floyd" />,
-      <Bud key="bud-idle" mood="idle" />,
-      <Bud key="bud-happy" mood="happy" />,
-      <Bud key="bud-sympathetic" mood="sympathetic" />,
-      ...badgeIds.flatMap((id) => [
-        <Badge key={`${id}-earned`} id={id} earned />,
-        <Badge key={`${id}-locked`} id={id} earned={false} />,
-      ]),
-    ];
-
-    for (const node of nodes) {
-      const svg = renderArt(node);
-      expect(svg.querySelector('filter, linearGradient, radialGradient, text')).toBeNull();
+describe('Badge SVGs', () => {
+  it('contain no filters, gradients, or text elements', () => {
+    for (const id of badgeIds) {
+      for (const earned of [true, false]) {
+        const svg = renderSvg(<Badge id={id} earned={earned} />);
+        expect(svg.querySelector('filter, linearGradient, radialGradient, text')).toBeNull();
+      }
     }
   });
 });

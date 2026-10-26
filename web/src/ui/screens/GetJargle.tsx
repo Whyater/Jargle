@@ -9,6 +9,8 @@ import {
 } from '../../config';
 import { Screen } from '../components/Screen';
 import { Button, LinkButton } from '../components/Button';
+import { GameIcon } from '../components/GameIcon';
+import '../../styles/screens.css';
 import { copyText, selectTextOf } from '../../platform/share';
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -24,30 +26,23 @@ export function GetJargleScreen() {
   useEffect(() => setCanInstall(!!savedInstall), []);
   return (
     <Screen title="Get Jargle">
-      <div class="stack-lg">
-        <section class="stack-sm">
-          <h2>Mac</h2>
-          <CommandBox label="Paste this into Terminal:" command={macInstallCmd} />
-          <LinkButton block href={macDownloadUrl} external>
-            Download for Mac
-          </LinkButton>
+      <div class="get stack">
+        <p class="soft-note">Put Jargle on your phone or computer. It works offline once it is installed.</p>
+        <section class="about-card stack-sm">
+          <h2>iPhone</h2>
+          <ol class="get-steps">
+            <li>In Safari, tap the Share button.</li>
+            <li>Then Add to Home Screen.</li>
+            <li>Then Add.</li>
+          </ol>
         </section>
-        <section class="stack-sm">
-          <h2>Windows</h2>
-          <CommandBox label="Paste this into PowerShell:" command={winInstallCmd} />
-          <LinkButton block href={winDownloadUrl} external>
-            Download for Windows
-          </LinkButton>
-        </section>
-        <section class="stack-sm">
+        <section class="about-card stack-sm">
           <h2>Android</h2>
-          <LinkButton block href={androidApkUrl} external>
-            Download the Android app
-          </LinkButton>
-          <p>Open the file after it downloads, then allow the install.</p>
           {canInstall ? (
             <Button
               primary
+              block
+              gameIcon="download"
               onClick={async () => {
                 if (savedInstall) {
                   await savedInstall.prompt();
@@ -58,20 +53,33 @@ export function GetJargleScreen() {
               Install app
             </Button>
           ) : null}
+          <LinkButton block gameIcon="download" href={androidApkUrl} external>
+            Download the Android app
+          </LinkButton>
+          <p class="small">Open the file after it downloads, then allow the install.</p>
         </section>
-        <section>
-          <h2>iPhone</h2>
-          <ol>
-            <li>In Safari, tap the Share button.</li>
-            <li>Then Add to Home Screen.</li>
-            <li>Then Add.</li>
-          </ol>
+        <section class="about-card stack-sm">
+          <h2>Mac</h2>
+          <LinkButton block gameIcon="download" href={macDownloadUrl} external>
+            Download for Mac
+          </LinkButton>
+          <CommandBox label="Or paste this into Terminal:" command={macInstallCmd} />
         </section>
-        <p>
-          Or play in your browser:{' '}
-          <a class="link" href={appUrl}>
-            {appUrl}
-          </a>
+        <section class="about-card stack-sm">
+          <h2>Windows</h2>
+          <LinkButton block gameIcon="download" href={winDownloadUrl} external>
+            Download for Windows
+          </LinkButton>
+          <CommandBox label="Or paste this into PowerShell:" command={winInstallCmd} />
+        </section>
+        <p class="get-web">
+          <GameIcon name="play" size={20} />
+          <span>
+            Or play in your browser:{' '}
+            <a class="link" href={appUrl}>
+              {appUrl}
+            </a>
+          </span>
         </p>
       </div>
     </Screen>
@@ -89,8 +97,8 @@ function CommandBox({ label, command }: { label: string; command: string }) {
     else if (box.current) selectTextOf(box.current);
   }
   return (
-    <div class="stack-sm">
-      <p>{label}</p>
+    <div class="command stack-sm">
+      <p class="small">{label}</p>
       <p class="code-text cmd" ref={box}>
         {pieces.map((piece, i) => (
           <span key={i}>
@@ -103,7 +111,7 @@ function CommandBox({ label, command }: { label: string; command: string }) {
           </span>
         ))}
       </p>
-      <Button block icon="copy" onClick={copy}>
+      <Button block small icon="copy" onClick={copy}>
         {copied ? 'Copied' : 'Copy'}
       </Button>
     </div>

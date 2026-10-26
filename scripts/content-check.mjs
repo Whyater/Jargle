@@ -104,8 +104,8 @@ function checkStringArray(value, file, errors, label) {
 
 // Check the shape and fields of one term item.
 function checkItem(item, file, errors) {
-  const keys = ['id', 'kind', 'topic', 'term', 'meaning', 'clues', 'assumes', 'decoys', 'exchange', 'old_tech', 'sources', 'checked_on', 'difficulty', 'decisive_clue', 'release_day'];
-  if (!checkKeys(item, keys, errors, file, 'item', ['release_day'])) return;
+  const keys = ['id', 'kind', 'topic', 'term', 'meaning', 'clues', 'assumes', 'decoys', 'exchange', 'old_tech', 'sources', 'checked_on', 'difficulty', 'decisive_clue', 'release_day', 'bank'];
+  if (!checkKeys(item, keys, errors, file, 'item', ['release_day', 'bank'])) return;
   if (item.kind !== 'term') addError(errors, file, 'kind must be term');
   if (!TOPICS.includes(item.topic)) addError(errors, file, 'topic is invalid');
   if (!isNonEmptyString(item.term)) addError(errors, file, 'term must be non-empty');
@@ -143,6 +143,9 @@ function checkItem(item, file, errors) {
   if (![1, 2, 3].includes(item.difficulty)) addError(errors, file, 'difficulty must be 1, 2, or 3');
   if (item.decisive_clue !== item.difficulty) addError(errors, file, 'decisive_clue must equal difficulty');
   if (item.release_day !== undefined && (!Number.isInteger(item.release_day) || item.release_day <= 0)) addError(errors, file, 'release_day must be a positive integer');
+  // Bank words are extra Endless words. They are out from day 1, so they never get a release day.
+  if (item.bank !== undefined && item.bank !== true) addError(errors, file, 'bank must be true when present');
+  if (item.bank && item.release_day !== undefined) addError(errors, file, 'bank items must not have release_day');
 }
 
 // Check the shape and fields of one lesson.
@@ -310,7 +313,8 @@ function checkSchedule(schedule, items, file, errors, warnings) {
     let dayNumber = 0;
     if (isValidDate(day.date)) {
       const [year, month, date] = day.date.split('-').map(Number);
-      dayNumber = Math.floor((Date.UTC(year, month - 1, date) - Date.UTC(2026, 9, 26)) / 86400000) + 1;
+      // Day 1 is launch day, Sun Oct 25, 2026.
+      dayNumber = Math.floor((Date.UTC(year, month - 1, date) - Date.UTC(2026, 9, 25)) / 86400000) + 1;
     }
     if (dayNumber !== previousDay + 1) addError(errors, file, `${field}.date must be consecutive starting at day 1`);
     previousDay = dayNumber;
@@ -320,10 +324,12 @@ function checkSchedule(schedule, items, file, errors, warnings) {
     if (typeof day.rerun !== 'boolean') addError(errors, file, `${field}.rerun must be boolean`);
     const item = items.get(day.term);
     if (item && isValidDate(day.date)) {
-      const weekday = new Date(`${day.date}T00:00:00Z`).getUTCDay();
-      const tier = weekday === 1 ? 1 : (weekday >= 2 && weekday <= 4 ? 2 : 3);
-      if ((!day.rerun && item.difficulty !== tier) || (day.rerun && item.difficulty > tier)) addError(errors, file, `${day.term} difficulty does not match weekday tier`);
+      // Weeks count from launch day: day 1 of each week is easy, days 2 to 4 medium, days 5 to 7 hard.
+      const dayOfWeek = (dayNumber - 1) % 7;
+      const tier = dayOfWeek === 0 ? 1 : (dayOfWeek <= 3 ? 2 : 3);
+      if ((!day.rerun && item.difficulty !== tier) || (day.rerun && item.difficulty > tier)) addError(errors, file, `${day.term} difficulty does not match its day of the week tier`);
       if (item.old_tech || item.topic === 'old-tech' || ['ptp-1', 'ptp-2'].includes(item.id)) addError(errors, file, `${day.term} is not schedulable`);
+      if (item.bank) addError(errors, file, `${day.term} is a bank word and is not schedulable`);
       if (/^(chatgpt|gemini|copilot)$/i.test(item.term)) addError(errors, file, `${day.term} is a prohibited product answer`);
       if (PRODUCTS.includes(item.term.toLowerCase())) addWarning(warnings, file, `${day.term} is a product name`);
     }
@@ -344,11 +350,12 @@ function checkOldTech(value, items, file, errors) {
       addError(errors, file, `old_tech_order references missing item ${id}`);
       continue;
     }
-    if (!item.old_tech || item.topic !== 'old-tech' || ![1, 2].includes(item.difficulty)) addError(errors, file, `${id} is invalid Old Tech`);
+    if (!item.old_tech || item.topic !== 'old-tech' || ![1, 2].includes(item.difficulty) || item.bank) addError(errors, file, `${id} is invalid Old Tech`);
     if (item.exchange?.[0]?.speaker !== 'floyd') addError(errors, file, `${id} Old Tech exchange must start with Floyd`);
     if (!item.exchange?.some((line) => line.speaker === 'bud' && line.text.startsWith("Today's version: "))) addError(errors, file, `${id} Old Tech needs a Today's version line`);
   }
-  for (const item of items.values()) if (item.old_tech && !value.includes(item.id)) addError(errors, file, `${item.id} is missing from old_tech_order`);
+  // Old-tech bank words only show up in Endless, so they stay out of the Old Tech list.
+  for (const item of items.values()) if (item.old_tech && !item.bank && !value.includes(item.id)) addError(errors, file, `${item.id} is missing from old_tech_order`);
 }
 
 // Check the two PTP extra items.
@@ -363,7 +370,7 @@ function checkPtp(value, items, scheduleTerms, file, errors) {
       addError(errors, file, `ptp_extras references missing item ${id}`);
       continue;
     }
-    if (![1, 2].includes(item.difficulty) || item.old_tech || item.release_day !== undefined) addError(errors, file, `${id} is invalid PTP extra`);
+    if (![1, 2].includes(item.difficulty) || item.old_tech || item.release_day !== undefined || item.bank) addError(errors, file, `${id} is invalid PTP extra`);
     if (scheduleTerms.has(id)) addError(errors, file, `${id} must not be scheduled`);
   }
 }
@@ -385,6 +392,23 @@ function checkCommonAndMiss(common, miss, items, file, errors) {
   }
   const commonWords = new Set((Array.isArray(common) ? common : []).map((entry) => typeof entry === 'string' ? entry.toLowerCase() : ''));
   for (const item of items.values()) if (!item.old_tech && commonWords.has(item.term.toLowerCase())) addError(errors, file, `${item.id} daily term is a common word`);
+}
+
+// Check that every bank word is new: no other item may use the same term.
+function checkBankTerms(items, errors) {
+  const owners = new Map();
+  for (const item of items.values()) {
+    if (typeof item.term !== 'string') continue;
+    const key = item.term.toLowerCase();
+    if (!owners.has(key)) owners.set(key, []);
+    owners.get(key).push(item);
+  }
+  for (const list of owners.values()) {
+    if (list.length < 2) continue;
+    for (const item of list) {
+      if (item.bank) addError(errors, path.join(contentDir, 'items', `${item.id}.json`), `bank term "${item.term}" is already used by another item`);
+    }
+  }
 }
 
 // Check early terms against one release order.
@@ -487,9 +511,12 @@ export function checkContent({ strict = false } = {}) {
   const commonWords = readJson(commonFile, errors) || [];
   checkCommonAndMiss(commonWords, missLines, items, commonFile, errors);
   const realOrder = schedule.days?.filter((day) => !day.rerun).map((day) => day.term) || [];
+  checkBankTerms(items, errors);
+  // Bank items count as out on day 1 here, so they can't name a daily word before its day.
   checkEarlyWords(items, lessons, commonWords, errors, realOrder, 'real');
   checkEarlyWords(items, lessons, commonWords, errors, DEMO_ORDER, 'demo');
   const referenced = new Set([...scheduleTerms.keys(), ...oldTech, ...ptpExtras]);
+  for (const item of items.values()) if (item.bank) referenced.add(item.id);
   const unreferenced = [...items.keys()].filter((id) => !referenced.has(id));
   if (unreferenced.length) addWarning(warnings, itemDir, `${unreferenced.length} item file(s) are not referenced`);
   const uncheckedFiles = [];

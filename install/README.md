@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD013 -->
 # Install Jargle
 
 Jargle is a daily tech word game. Choose the install method for your device below.

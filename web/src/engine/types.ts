@@ -66,6 +66,8 @@ export interface TermItem {
   decisive_clue: Difficulty;
   /** Day number the item first becomes visible (Old Tech, lessons). Dailies use their schedule day. */
   release_day?: number;
+  /** Extra word for Endless only. Never a daily word, out from day 1. */
+  bank?: boolean;
 }
 
 export interface LessonCard {
@@ -237,4 +239,138 @@ export interface SaveState {
   lastFinished?: Record<string, LocalDate>;
   /** Miss lines still to say this cycle, as indexes, per speaker. */
   missLineQueue?: { floyd: number[]; bud: number[] };
+  // v2 fields. Optional so saves from before v2 still load (missing = 0).
+  /** Total XP earned on this phone. The progress code does not carry it. */
+  xp?: number;
+  /** Best Endless score. */
+  endlessBest?: number;
+  /** Endless games finished. */
+  endlessGames?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Quick questions (v2). Built only from an item's own term, meaning and its
+// 3 decoys, so no new content is needed.
+
+export type QuestionKind = 'meaning' | 'name' | 'truefalse' | 'oldnew' | 'clue';
+
+/** Fields every question has. */
+export interface QuestionBase {
+  /** "{kind}:{itemId}:{seed}". Unique within a run. */
+  id: string;
+  kind: QuestionKind;
+  itemId: string;
+  difficulty: Difficulty;
+  /** Buttons in display order (already shuffled where that makes sense). */
+  options: string[];
+  /** The option that is right. Always one of `options`. */
+  answer: string;
+  /** Short line shown after answering: "{term}: {meaning}". */
+  why: string;
+}
+
+/** See a word, pick its meaning from 4 (the item's meaning + its 3 decoys' meanings). */
+export interface MeaningQuestion extends QuestionBase {
+  kind: 'meaning';
+  term: string;
+}
+
+/** See a meaning, pick the word from 4 (the term + its 3 decoy terms). */
+export interface NameQuestion extends QuestionBase {
+  kind: 'name';
+  meaning: string;
+}
+
+/** "{term} means: {shownMeaning}". Options are always ['True', 'False']. False uses a decoy's meaning. */
+export interface TrueFalseQuestion extends QuestionBase {
+  kind: 'truefalse';
+  term: string;
+  shownMeaning: string;
+}
+
+/** Is this old tech or today's tech? Options are always ['Old tech', "Today's tech"]. Uses `old_tech`. */
+export interface OldNewQuestion extends QuestionBase {
+  kind: 'oldnew';
+  term: string;
+}
+
+/**
+ * Mini Clue Climb: the item's first 3 clues, shown one at a time by the UI,
+ * then pick the word from 4. Fewer clues used = more points.
+ */
+export interface ClueQuestion extends QuestionBase {
+  kind: 'clue';
+  /** Exactly 3 clues (the first 3 of the item; the decisive clue is always among them). */
+  clues: string[];
+}
+
+export type Question = MeaningQuestion | NameQuestion | TrueFalseQuestion | OldNewQuestion | ClueQuestion;
+
+// ---------------------------------------------------------------------------
+// Endless mode (v2). A run lives in memory (or the UI may keep it in
+// sessionStorage); only finishEndless writes to SaveState.
+
+export interface EndlessAnswer {
+  /** The option the player tapped. */
+  choice: string;
+  /** Clue questions only: clues shown when they answered, 1 to 3. Missing = 1. */
+  cluesUsed?: number;
+}
+
+export interface EndlessRun {
+  seed: number;
+  /** Date the run started. Fixes which items are released. */
+  today: LocalDate;
+  /** Item ids this run may ask about (released by `today`). */
+  pool: string[];
+  /** Item ids already asked in this cycle; cleared once the whole pool is used. */
+  used: string[];
+  /** The question on screen now. It stays after the last answer so the why line can show. Null only if the pool is empty. */
+  question: Question | null;
+  /** True after answerEndless and before nextEndlessQuestion. */
+  answered: boolean;
+  /** Questions asked so far, counting the current one. */
+  asked: number;
+  /** Right answers so far. */
+  correct: number;
+  score: number;
+  /** Starts at 3. A wrong answer loses one. */
+  hearts: number;
+  /** Right answers in a row right now. */
+  combo: number;
+  bestCombo: number;
+  /** XP earned this run, added to SaveState by finishEndless. */
+  xp: number;
+  /** True when hearts reach 0. */
+  over: boolean;
+}
+
+export interface EndlessAnswerResult {
+  run: EndlessRun;
+  correct: boolean;
+  /** Points added to the score (base x combo multiplier). 0 when wrong. */
+  points: number;
+  xpGained: number;
+  /** Combo after this answer (0 after a wrong one). */
+  comboAfter: number;
+  /** Multiplier used for this answer: 1, 2 or 3. */
+  multiplier: number;
+}
+
+// ---------------------------------------------------------------------------
+// XP and levels (v2).
+
+/** Things that earn XP. Bars are the bars left when a Clue Climb round ended. */
+export type XpAction =
+  | { type: 'round'; mode: RoundMode; status: 'solved' | 'learned'; bars: number }
+  | { type: 'lesson' }
+  | { type: 'endless'; correct: boolean; combo: number };
+
+export interface LevelInfo {
+  /** 1 for a new player. */
+  level: number;
+  /** XP earned inside the current level. */
+  intoLevel: number;
+  /** XP this level needs in total before the next one. */
+  needed: number;
 }

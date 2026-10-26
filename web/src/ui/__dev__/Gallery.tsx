@@ -24,15 +24,15 @@ function installDevDefaults() {
   engine.dayNumber = (date: string) => {
     const parts = date.split('-');
     const day = Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    return Math.round((day - Date.UTC(2026, 9, 26)) / 86400000) + 1;
+    return Math.round((day - Date.UTC(2026, 9, 25)) / 86400000) + 1;
   };
   engine.dateOfDay = (day: number) => {
-    const d = new Date(Date.UTC(2026, 9, 26) + (day - 1) * 86400000);
+    const d = new Date(Date.UTC(2026, 9, 25) + (day - 1) * 86400000);
     return d.toISOString().slice(0, 10);
   };
   engine.lessonOptions = (lesson, index) => lesson.checks[index].options;
   engine.saveLessonProgress = (state) => state;
-  engine.finishLesson = (state) => ({ state, newBadges: ['first-lesson'] });
+  engine.finishLesson = (state) => ({ state, newBadges: ['first-lesson'], xpGained: 30 });
   engine.answerReview = (state) => state;
   engine.nextWord = () => ({ message: "You've done them all." });
   engine.startPtpSet = (state) => state;

@@ -9,6 +9,7 @@ never makes up text while you play. Each file follows the types in
 | Path | What it holds |
 | --- | --- |
 | `items/<id>.json` | One word (daily, Pass the Phone extra or Old Tech) |
+| `items/bank-<id>.json` | One bank word, used only in Endless |
 | `lessons/<id>.json` | Short lessons: 2 to 4 cards, then 3 questions |
 | `schedule.json` | Which word plays on which date (Day 1 is Oct 26, 2026) |
 | `old_tech_order.json` | The fixed order of Floyd's Old Tech words |
@@ -27,10 +28,10 @@ A common word can never be a daily word.
 3. Write 5 clues that build on each other. Add 3 decoys of the same kind,
    each with its own meaning and a source link.
 4. Set `difficulty` and `decisive_clue` to the same number:
-   - 1 (Mondays): clue 1 alone rules out every decoy.
-   - 2 (Tuesday to Thursday): clue 1 still fits a decoy. After clue 2,
+   - 1 (Sundays): clue 1 alone rules out every decoy.
+   - 2 (Monday to Wednesday): clue 1 still fits a decoy. After clue 2,
      none fit.
-   - 3 (Friday to Sunday): clue 1 fits two or more decoys and clue 2
+   - 3 (Thursday to Saturday): clue 1 fits two or more decoys and clue 2
      still fits one. After clue 3, none fit.
 5. Only clue 5 may give away letters.
 6. Write a short exchange between Floyd and Bud. Give each Floyd line a
@@ -45,6 +46,22 @@ A common word can never be a daily word.
 A daily word can't show up early. Items that come out on or before a
 word's day may not use that word, except the word's own item. The
 checker finds these for you.
+
+## Bank words
+
+Bank words give Endless more to ask. They have the same fields as any
+other word, plus `"bank": true`, and their file names start with `bank-`.
+
+- A bank word is never a daily word. Don't add it to `schedule.json`,
+  `old_tech_order.json` or `ptp_extras.json`.
+- Its term can't match any other item's term.
+- Endless can ask it from Day 1, so it can't mention any daily word
+  either. The checker treats it as out on Day 1.
+- Old tech bank words set `old_tech` to `true` and use the `old-tech`
+  topic, but they stay out of Floyd's Old Tech list.
+
+When you add a new daily word later, pick one that isn't already a bank
+word. The checker stops if two items share a term.
 
 ## How to check it
 

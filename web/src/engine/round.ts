@@ -22,6 +22,7 @@ import {
 import { plural, seededShuffle } from './text';
 import { pickMissLine } from './missLines';
 import { isInGrace, roundCounts } from './counting';
+import { xpFor } from './xp';
 
 function barsLeft(record: RoundRecord): number {
   const clueCost = Math.min(record.k, 4) - 1;
@@ -244,6 +245,13 @@ function finishRound(
   record.finished_on = today;
   // Freeze the battery so later views do not change the result.
   record.end_bars = barsLeft(record);
+  // A replay earns XP at the practice rate, so a daily only pays the daily rate once.
+  state.xp = (state.xp || 0) + xpFor({
+    type: 'round',
+    mode: record.replay ? 'practice' : record.mode,
+    status: record.status as 'solved' | 'learned',
+    bars: record.end_bars || 0,
+  });
   state.flags.firstRoundDone = true;
   if (!state.lastFinished) state.lastFinished = {};
   state.lastFinished[item.id] = today;
@@ -332,8 +340,9 @@ function result(
   message: string | null,
   outcome: RoundResult['outcome'],
   newBadges: BadgeId[] = [],
+  xpGained: number = 0,
 ): RoundResult {
-  return { state: state, message: message, outcome: outcome, newBadges: newBadges };
+  return { state: state, message: message, outcome: outcome, newBadges: newBadges, xpGained: xpGained };
 }
 
 function doSelect(
@@ -428,14 +437,13 @@ function doShowAnswer(
   return result(state, 'Learned it: ' + item.term + '.', 'learned', badges);
 }
 
-export function applyRound(
-  state: SaveState,
+function applyAction(
+  s: SaveState,
   content: ContentBundle,
   key: string,
   action: RoundAction,
   today: LocalDate,
 ): RoundResult {
-  const s = copyState(state);
   const record = s.rounds[key];
   if (!record) return result(s, null, 'none');
   if (action.type === 'postStep') {
@@ -450,4 +458,19 @@ export function applyRound(
   if (action.type === 'check') return doCheck(s, content, key, today);
   if (action.type === 'nextClue') return doNextClue(s, content, key, today);
   return doShowAnswer(s, content, key, today);
+}
+
+export function applyRound(
+  state: SaveState,
+  content: ContentBundle,
+  key: string,
+  action: RoundAction,
+  today: LocalDate,
+): RoundResult {
+  const s = copyState(state);
+  const xpBefore = s.xp || 0;
+  const roundResult = applyAction(s, content, key, action, today);
+  // XP only changes when a round ends.
+  roundResult.xpGained = Math.max(0, (roundResult.state.xp || 0) - xpBefore);
+  return roundResult;
 }

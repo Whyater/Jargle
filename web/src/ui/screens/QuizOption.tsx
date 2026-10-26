@@ -1,8 +1,11 @@
 import { useState } from 'preact/hooks';
-import { playSound } from '../../platform/audio';
 import { Announcer } from '../components/BottomBar';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icons';
+import { GameIcon } from '../components/GameIcon';
+import { feedback } from '../components/feedback';
+import './round.css';
+import '../../styles/screens.css';
 
 export interface QuizOptionItem {
   term: string;
@@ -27,21 +30,21 @@ export function QuizOption({ options, answer, onAnswer, last, onNext }: QuizOpti
     if (answered) return;
     const isCorrect = term === answer;
     setPicked(term);
-    playSound(isCorrect ? 'chime' : 'tock');
+    feedback(isCorrect ? 'correct' : 'wrong');
     if (onAnswer) onAnswer(isCorrect, term);
   }
 
   const message = answered && pickedItem ? (correct ? 'Right. ' : 'Not this one. ') + pickedItem.meaning : '';
 
   return (
-    <div class="stack-sm">
-      <div class="cards">
+    <div class="quiz stack">
+      <div class="cards play-cards">
         {options.map((item, index) => {
           const isAnswer = answered && item.term === answer;
           const isMissed = answered && !correct && item.term === picked;
           let className = 'answer-card';
-          if (isAnswer) className += ' is-answer';
-          if (isMissed) className += ' is-missed';
+          if (isAnswer) className += ' is-answer flip';
+          if (isMissed) className += ' is-missed flip';
           return (
             <button
               type="button"
@@ -64,16 +67,24 @@ export function QuizOption({ options, answer, onAnswer, last, onNext }: QuizOpti
         })}
       </div>
       {answered && pickedItem ? (
-        <div class="stack-sm">
-          <p class="result-line">{correct ? 'Right.' : 'Not this one.'}</p>
+        <div class={correct ? 'quiz-why is-right' : 'quiz-why is-wrong'}>
+          <p class="quiz-verdict">
+            <span class="quiz-verdict-icon" aria-hidden="true">
+              {correct ? <Icon name="check" /> : <GameIcon name="close" size={18} />}
+            </span>
+            {correct ? 'Right.' : 'Not this one.'}
+          </p>
           <p>{pickedItem.meaning}</p>
         </div>
       ) : null}
       <Announcer message={message} />
       {answered && onNext ? (
-        <Button primary block onClick={onNext}>
-          {last ? 'Finish' : 'Next question'}
-        </Button>
+        // Pinned to the bottom, so the next step is in reach even when the meaning is long.
+        <div class="after-actions">
+          <Button primary big block onClick={onNext}>
+            {last ? 'Finish' : 'Next question'}
+          </Button>
+        </div>
       ) : null}
     </div>
   );

@@ -31,7 +31,9 @@ jobs:
       - run: node scripts/build-content.mjs
         working-directory: .
       - run: npx vite build
+      # The runner's apt mirror is sometimes very slow; fail fast so the shard can be rerun.
       - run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
       - run: npx playwright test --shard=${{ matrix.shard }}/4
         env:
           CI: true

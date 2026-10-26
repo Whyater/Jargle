@@ -97,6 +97,20 @@ function readTextSize(
   return fallback;
 }
 
+/** A whole number of 0 or more, or undefined when the save never had one. */
+function readCount(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return undefined;
+  return Math.floor(value);
+}
+
+/** Copies XP and the Endless scores onto a state, skipping the ones that are missing. */
+function addScores(state: SaveState, xp: number | undefined, endlessBest: number | undefined, endlessGames: number | undefined): SaveState {
+  if (xp !== undefined) state.xp = xp;
+  if (endlessBest !== undefined) state.endlessBest = endlessBest;
+  if (endlessGames !== undefined) state.endlessGames = endlessGames;
+  return state;
+}
+
 function validState(value: unknown): SaveState | null {
   const raw = asObject(value);
   if (raw.v !== 1) return null;
@@ -112,7 +126,7 @@ function validState(value: unknown): SaveState | null {
     const date = savedLastFinished[key];
     if (typeof date === 'string') lastFinished[key] = date;
   }
-  return {
+  const state: SaveState = {
     ...defaults,
     v: 1,
     rounds: readRounds(raw.rounds),
@@ -152,6 +166,7 @@ function validState(value: unknown): SaveState | null {
       bud: filterList(queue.bud, 'number') as number[],
     },
   };
+  return addScores(state, readCount(raw.xp), readCount(raw.endlessBest), readCount(raw.endlessGames));
 }
 
 export function loadState(key: StorageKey): SaveState | null {
@@ -337,7 +352,7 @@ export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: num
     }
   }
 
-  return {
+  const merged: SaveState = {
     v: 1,
     rounds,
     ptpSet,
@@ -368,6 +383,14 @@ export function mergeStates(mine: SaveState, theirs: SaveState & { savedAt?: num
     // The miss queue is a per-phone shuffle queue, so keep mine.
     missLineQueue: mergeMissLineQueue(mine, theirs),
   };
+  // XP and scores only go up, so the bigger number from either tab is the right one.
+  return addScores(merged, biggest(mine.xp, theirs.xp), biggest(mine.endlessBest, theirs.endlessBest), biggest(mine.endlessGames, theirs.endlessGames));
+}
+
+function biggest(a: number | undefined, b: number | undefined): number | undefined {
+  if (a === undefined) return b;
+  if (b === undefined) return a;
+  return Math.max(a, b);
 }
 
 export function watchOtherTabs(

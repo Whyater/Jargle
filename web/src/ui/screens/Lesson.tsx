@@ -6,28 +6,18 @@ import { hrefFor, useRoute } from '../router';
 import { Screen } from '../components/Screen';
 import { Button, LinkButton } from '../components/Button';
 import { Announcer } from '../components/BottomBar';
-import { Badge } from '../components/art';
-import { Exchange } from '../components/Exchange';
+import { ProgressBar } from '../components/ProgressBar';
+import { Confetti } from '../components/Confetti';
+import { XpFloat, showToast } from '../components/Toast';
+import { Pill } from '../components/Pill';
+import { Mascot } from '../components/Mascot';
+import { MascotSays } from '../components/MascotSays';
+import { feedback } from '../components/feedback';
 import { QuizOption } from './QuizOption';
+import { levelReached, markSeenLevel, readXp } from './homeLogic';
+import { NewBadge, Sources } from './RoundAfter';
 import type { BadgeId } from '../../engine/types';
-
-function Sources({ sources }: { sources: { name: string; url: string }[] }) {
-  return (
-    <section>
-      <hr class="perf" />
-      <h2>Where this comes from</h2>
-      <ul class="plain-list">
-        {sources.map((source) => (
-          <li key={source.url}>
-            <a class="link" href={source.url} target="_blank" rel="noopener">
-              {source.name}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
+import '../../styles/screens.css';
 
 export function LessonScreen({ lessonId }: { lessonId?: string }) {
   const route = useRoute();
@@ -42,6 +32,9 @@ export function LessonScreen({ lessonId }: { lessonId?: string }) {
     window.scrollTo(0, 0);
   }, [card, check]);
   const [newBadges, setNewBadges] = useState<{ id: BadgeId; name: string }[]>([]);
+  // Set only when the lesson is finished on this visit, so the confetti plays once.
+  const [justDone, setJustDone] = useState(false);
+  const [xpGained, setXpGained] = useState(0);
   const [done, setDone] = useState(
     () => !!(app.save && app.save.lessons[id] && app.save.lessons[id].finished_on),
   );
@@ -52,7 +45,7 @@ export function LessonScreen({ lessonId }: { lessonId?: string }) {
     return (
       <Screen title="Lesson">
         <p>Lesson not found.</p>
-        <LinkButton href={hrefFor('home')}>Home</LinkButton>
+        <LinkButton href={hrefFor('learn')}>Back to Learn</LinkButton>
       </Screen>
     );
   }
@@ -62,6 +55,17 @@ export function LessonScreen({ lessonId }: { lessonId?: string }) {
     commit(result.state);
     const views = engine.badgeViews(result.state, app.content!, app.today);
     if (result.newBadges.length) playSound('stamp');
+    else feedback('levelUp');
+    // A lesson that crosses into a new level says so here, and Play does not cheer it again later.
+    const xpAfter = readXp(result.state);
+    const newLevel = levelReached(xpAfter - result.xpGained, xpAfter);
+    if (newLevel) {
+      showToast('Level ' + newLevel + '!', 'sunny', 'star');
+      markSeenLevel(newLevel);
+    }
+    // XP comes only with the first finish of a lesson (0 after that).
+    setXpGained(result.xpGained);
+    setJustDone(true);
     setNewBadges(
       result.newBadges.map((id) => {
         const view = views.filter((badge) => badge.id === id)[0];
@@ -71,25 +75,45 @@ export function LessonScreen({ lessonId }: { lessonId?: string }) {
     setDone(true);
   };
 
+  const totalSteps = lesson.cards.length + lesson.checks.length;
+
   if (done) {
     const earned = newBadges;
     return (
       <Screen title={lesson.title} runhead={'Lesson ' + lesson.number}>
-        <div class="stack">
-          <p class="result-line">Lesson done.</p>
-          <div class="learn-card">
+        <div class="lesson stack">
+          <div class="win-card is-solved">
+            <Confetti burst={justDone ? 1 : 0} />
+            <div class="win-mascots">
+              <Mascot who="floyd" size={76} pose="happy" />
+              <Mascot who="bud" size={76} pose="happy" />
+            </div>
+            <p class="win-shout">Lesson done.</p>
+            {xpGained ? (
+              <div class="win-stats">
+                <span class="win-xp">
+                  <Pill tone="sunny" icon="star">
+                    +{xpGained} XP
+                  </Pill>
+                  <XpFloat amount={xpGained} burst={justDone ? 1 : 0} />
+                </span>
+              </div>
+            ) : null}
+          </div>
+          <div class="lesson-card takeaway">
+            <p class="lesson-card-label">Remember this</p>
             <p>{lesson.takeaway}</p>
           </div>
           {earned.map((badge) => (
-            <div class="new-badge stamp" key={badge.id}>
-              <Badge id={badge.id} earned size={72} />
-              <p>New badge: {badge.name}</p>
-            </div>
+            <NewBadge key={badge.id} id={badge.id} name={badge.name} />
           ))}
-          <Sources sources={lesson.sources} />
-          <LinkButton primary block href={hrefFor('home')}>
-            Home
+          <LinkButton primary big block href={hrefFor('learn')}>
+            Back to Learn
           </LinkButton>
+          <LinkButton block href={hrefFor('endless')}>
+            Play Endless
+          </LinkButton>
+          <Sources sources={lesson.sources} />
           <Announcer message="Lesson done." />
         </div>
       </Screen>
@@ -105,13 +129,15 @@ export function LessonScreen({ lessonId }: { lessonId?: string }) {
         runhead={'Lesson ' + lesson.number}
         runheadRight={'Card ' + (card + 1) + ' of ' + lesson.cards.length}
       >
-        <div class="stack">
-          <div class="learn-card">
+        <div class="lesson stack">
+          <ProgressBar value={card + 1} max={totalSteps} tone="mint" big label={'Step ' + (card + 1) + ' of ' + totalSteps} />
+          <div class="lesson-card" key={card}>
             <p>{learnCard.text}</p>
           </div>
-          <Exchange lines={[{ speaker: learnCard.mascot, text: learnCard.line }]} />
+          <MascotSays key={'says-' + card} who={learnCard.mascot} text={learnCard.line} pose="talk" size={72} />
           <Button
             primary
+            big
             block
             onClick={() => {
               commit(engine.saveLessonProgress(app.save!, id, { card: nextCard }));
@@ -133,6 +159,7 @@ export function LessonScreen({ lessonId }: { lessonId?: string }) {
     term,
     meaning: checkData.why,
   }));
+  const step = lesson.cards.length + checkIndex + 1;
 
   return (
     <Screen
@@ -140,10 +167,9 @@ export function LessonScreen({ lessonId }: { lessonId?: string }) {
       runhead={'Lesson ' + lesson.number}
       runheadRight={'Question ' + (checkIndex + 1) + ' of ' + lesson.checks.length}
     >
-      <div class="stack">
-        <p>
-          <strong>{checkData.prompt}</strong>
-        </p>
+      <div class="lesson stack">
+        <ProgressBar value={step} max={totalSteps} tone="mint" big label={'Step ' + step + ' of ' + totalSteps} />
+        <p class="quiz-prompt">{checkData.prompt}</p>
         <QuizOption
           key={checkIndex}
           options={options}

@@ -6,6 +6,13 @@
 import type {
   BadgeId,
   ContentBundle,
+  EndlessAnswer,
+  EndlessAnswerResult,
+  EndlessRun,
+  LevelInfo,
+  Question,
+  QuestionKind,
+  XpAction,
   Lesson,
   LocalDate,
   RoundMode,
@@ -26,11 +33,14 @@ import { startPtpSet as realStartPtpSet, advancePtp as realAdvancePtp, ptpRoundI
 import { badgeViews as realBadgeViews, BADGE_NAMES as realBadgeNames, WEEK_ONE_NOTE as realWeekOneNote } from './badges';
 import { encodeProgressCode as realEncodeProgressCode, decodeProgressCode as realDecodeProgressCode, TYPO_MESSAGE as realTypoMessage, NEWER_MESSAGE as realNewerMessage, COPY_HINT as realCopyHint } from './code';
 import { DEMO_JUDGE_LINE as realDemoJudgeLine, demoState as realDemoState } from './demo';
+import { buildQuestion as realBuildQuestion, isCorrect as realIsCorrect, QUESTION_KINDS as realQuestionKinds } from './questions';
+import { startEndless as realStartEndless, answerEndless as realAnswerEndless, nextEndlessQuestion as realNextEndlessQuestion, finishEndless as realFinishEndless, endlessPool as realEndlessPool, comboMultiplier as realComboMultiplier, ENDLESS_HEARTS as realEndlessHearts } from './endless';
+import { xpFor as realXpFor, levelFromXp as realLevelFromXp, addXp as realAddXp } from './xp';
 
 // --- Dates -----------------------------------------------------
 
-/** Day 1 is Mon Oct 26, 2026. */
-export const LAUNCH_DATE: LocalDate = '2026-10-26';
+/** Day 1 is Sun Oct 25, 2026. */
+export const LAUNCH_DATE: LocalDate = '2026-10-25';
 
 export function todayLocal(_now: Date): LocalDate {
   return realTodayLocal(_now);
@@ -106,6 +116,8 @@ export interface RoundResult {
   message: string | null;
   outcome: 'none' | 'selected' | 'wrong' | 'solved' | 'learned';
   newBadges: BadgeId[];
+  /** XP added by this tap (only when the round ends), else 0. */
+  xpGained: number;
 }
 
 /** Opening a round starts it. Returns the existing record if already started. */
@@ -228,7 +240,7 @@ export function finishLesson(
   _content: ContentBundle,
   _lessonId: string,
   _today: LocalDate,
-): { state: SaveState; newBadges: BadgeId[] } {
+): { state: SaveState; newBadges: BadgeId[]; xpGained: number } {
   return realFinishLesson(_state, _content, _lessonId, _today);
 }
 
@@ -321,7 +333,52 @@ export function demoState(
   return realDemoState(_kind, _content);
 }
 
+// --- Quick questions (v2) -------------------------------------------------
+
+/** Builds one question from an item and its decoys. Same inputs = same question. */
+export function buildQuestion(_content: ContentBundle, _itemId: string, _kind: QuestionKind, _seed: string): Question {
+  return realBuildQuestion(_content, _itemId, _kind, _seed);
+}
+/** True if `choice` is the right option for the question. */
+export function isCorrect(_question: Question, _choice: string): boolean {
+  return realIsCorrect(_question, _choice);
+}
+
+// --- Endless (v2) -----------------------------------------------------------
+
+/** A new run with its first question ready. Only items released by `today`. */
+export function startEndless(_state: SaveState, _content: ContentBundle, _today: LocalDate, _seed: number): EndlessRun {
+  return realStartEndless(_state, _content, _today, _seed);
+}
+/** Scores the current question (hearts, combo, score, XP). Call nextEndlessQuestion to move on. */
+export function answerEndless(_run: EndlessRun, _answer: EndlessAnswer): EndlessAnswerResult {
+  return realAnswerEndless(_run, _answer);
+}
+/** The run with its next question. Unchanged if the run is over. */
+export function nextEndlessQuestion(_run: EndlessRun, _content: ContentBundle): EndlessRun {
+  return realNextEndlessQuestion(_run, _content);
+}
+/** Saves the run: endlessBest, endlessGames and XP. Call on game over or when the player leaves. */
+export function finishEndless(_state: SaveState, _run: EndlessRun, _today: LocalDate): SaveState {
+  return realFinishEndless(_state, _run, _today);
+}
+
+// --- XP and levels (v2) -----------------------------------------------------
+
+export function xpFor(_action: XpAction): number {
+  return realXpFor(_action);
+}
+/** {level, intoLevel, needed} from total XP. Level 2 comes after about 3 right answers. */
+export function levelFromXp(_xp: number): LevelInfo {
+  return realLevelFromXp(_xp);
+}
+
 export {
+  realAddXp as addXp,
+  realEndlessPool as endlessPool,
+  realComboMultiplier as comboMultiplier,
+  realEndlessHearts as ENDLESS_HEARTS,
+  realQuestionKinds as QUESTION_KINDS,
   realAddDays as addDays,
   realLongDate as longDate,
   realShareLines as shareLines,

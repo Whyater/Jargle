@@ -21,7 +21,9 @@ type RouteName =
   | 'code'
   | 'codeUse'
   | 'get'
-  | 'gallery';
+  | 'gallery'
+  | 'me'
+  | 'endless';
 
 const simplePaths: Record<string, RouteName> = {
   review: 'review',
@@ -36,6 +38,8 @@ const simplePaths: Record<string, RouteName> = {
   code: 'code',
   get: 'get',
   gallery: 'gallery',
+  me: 'me',
+  endless: 'endless',
 };
 
 const listeners = new Set<() => void>();
@@ -109,6 +113,19 @@ export function hrefFor(name: string, param?: string): string {
   if (name === 'codeUse') return '#/code/use';
   if (name in simplePaths) return `#/${name}`;
   return '#/';
+}
+
+export type TabName = 'play' | 'learn' | 'me';
+
+export function tabForRoute(name: string): TabName | null {
+  if (name === 'home' || name === 'review' || name === 'practice' || name === 'oldtech') {
+    return 'play';
+  }
+  if (name === 'learn') return 'learn';
+  if (name === 'me' || name === 'settings' || name === 'badges' || name === 'about' || name === 'how' || name === 'code' || name === 'codeUse' || name === 'get') {
+    return 'me';
+  }
+  return null;
 }
 
 export function navigate(name: string, param?: string): void {

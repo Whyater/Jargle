@@ -39,9 +39,9 @@ export const DEMO_LIST = [
 
 export const OLD_TECH = ['rotary-phone', 'cassette-tape', 'dewey-decimal-system', 'floppy-disk', 'phone-book', 'fax-machine'];
 
-/** Mondays 1, Tuesday to Thursday 2, Friday to Sunday 3. Day 1 is a Monday. */
+/** Weeks count from launch day: day 1 of each week is 1, days 2 to 4 are 2, days 5 to 7 are 3. */
 export function difficultyForDay(day: number): Difficulty {
-  const weekday = (day - 1) % 7; // 0 = Monday
+  const weekday = (day - 1) % 7; // 0 = launch weekday (Sunday)
   if (weekday === 0) return 1;
   if (weekday <= 3) return 2;
   return 3;

@@ -5,6 +5,7 @@ import { copyState } from './state';
 import { seededShuffle } from './text';
 import { TOPIC_ORDER } from './types';
 import { awardBadges } from './badges';
+import { xpFor } from './xp';
 
 function orderedLessons(content: ContentBundle): Lesson[] {
   const result: Lesson[] = [];
@@ -107,16 +108,19 @@ export function finishLesson(
   content: ContentBundle,
   lessonId: string,
   today: LocalDate,
-): { state: SaveState; newBadges: BadgeId[] } {
+): { state: SaveState; newBadges: BadgeId[]; xpGained: number } {
   const s = copyState(state);
   if (!s.lessons[lessonId]) {
     s.lessons[lessonId] = { card: 0, answers: [], finished_on: null };
   }
+  let xpGained = 0;
   if (!s.lessons[lessonId].finished_on) {
     s.lessons[lessonId].finished_on = today;
+    xpGained = xpFor({ type: 'lesson' });
+    s.xp = (s.xp || 0) + xpGained;
   }
   const newBadges = awardBadges(s, content, today);
-  return { state: s, newBadges: newBadges };
+  return { state: s, newBadges: newBadges, xpGained: xpGained };
 }
 
 export function todaysLesson(state: SaveState, content: ContentBundle, today: LocalDate): Lesson | null {

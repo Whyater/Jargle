@@ -4,10 +4,15 @@ import { navigate } from '../router';
 import { openRound } from '../actions';
 import { Screen } from '../components/Screen';
 import { Button } from '../components/Button';
-import { MascotPair } from '../components/Mascot';
-import { Badge } from '../components/art';
+import { Mascot } from '../components/Mascot';
+import { MascotSays } from '../components/MascotSays';
+import { GameIcon } from '../components/GameIcon';
+import type { GameIconName } from '../components/GameIcon';
+import { Icon } from '../components/Icons';
 import { newBadgesByRound } from './roundLogic';
 import { roundSummaryLine } from './listLogic';
+import { NewBadge } from './RoundAfter';
+import '../../styles/screens.css';
 import type { ContentBundle, PtpSet, SaveState } from '../../engine/types';
 import { ptpRoundCardLines, ptpTotalLine, ptpBestLine } from '../../engine/api';
 
@@ -51,9 +56,10 @@ export function PtpScreen() {
   if (record && record.status === 'playing') {
     return (
       <Screen title="Pass the Phone" focusKey="continue">
-        <div class="stack">
-          <p>Round {r} of {set.rounds.length}.</p>
-          <Button primary block onClick={() => navigate('play', key)}>
+        <div class="ptp stack">
+          <RoundPips r={r} total={set.rounds.length} />
+          <p class="ptp-round">Round {r} of {set.rounds.length}.</p>
+          <Button primary big block onClick={() => navigate('play', key)}>
             Continue
           </Button>
         </div>
@@ -67,43 +73,109 @@ export function PtpScreen() {
   }
 
   const item = content.items[itemId];
-  const cardLines = ptpRoundCardLines(r, Boolean(item && item.old_tech));
+  const oldTech = Boolean(item && item.old_tech);
+  const cardLines = ptpRoundCardLines(r, oldTech);
   cardLines[2] = 'Round ' + r + ' of ' + set.rounds.length + '.';
   return (
     <Screen title="Pass the Phone" focusKey={'round-' + r}>
-      <div class="stack">
-        <MascotPair size={64} />
-        <p>
-          <strong>{cardLines[0]}</strong>
-        </p>
-        <p>{cardLines[1]}</p>
-        <p class="result-line">{cardLines[2]}</p>
-        <p class="small">{cardLines[3]}</p>
-        <p class="note-box beige">{cardLines[4]}</p>
-        <p>{cardLines[5]}</p>
-        <Button primary block onClick={beReader}>
+      <div class="ptp stack">
+        <RoundPips r={r} total={set.rounds.length} />
+        <p class="ptp-round">{cardLines[2]}</p>
+        {/* Floyd introduces old tech rounds, Bud the modern ones. */}
+        <MascotSays who={oldTech ? 'floyd' : 'bud'} pose="talk" text={cardLines[4]} />
+        <p class="soft-note">{cardLines[5]}</p>
+        <Button primary big block onClick={beReader}>
           I'm the reader.
         </Button>
+        <PtpSteps lines={cardLines} />
       </div>
     </Screen>
   );
 }
 
+/** Four dots for the four rounds: done, now, and still to come. */
+function RoundPips({ r, total }: { r: number; total: number }) {
+  const pips = [];
+  for (let i = 1; i <= total; i++) {
+    let className = 'ptp-pip';
+    if (i < r) className += ' done';
+    if (i === r) className += ' now';
+    pips.push(<span key={i} class={className} />);
+  }
+  return (
+    <div class="ptp-pips" aria-hidden="true">
+      {pips}
+    </div>
+  );
+}
+
+/** How Pass the Phone works, in three short steps. */
+function PtpSteps({ lines }: { lines: string[] }) {
+  return (
+    <ol class="steps">
+      <li>
+        <span class="step-icon" aria-hidden="true">
+          <GameIcon name="people" size={24} />
+        </span>
+        <span>
+          <strong>{lines[0]}</strong>
+        </span>
+      </li>
+      <li>
+        <span class="step-icon" aria-hidden="true">
+          <GameIcon name="cards" size={24} />
+        </span>
+        <span>{lines[1]}</span>
+      </li>
+      <li>
+        <span class="step-icon" aria-hidden="true">
+          <GameIcon name="heart" size={24} />
+        </span>
+        <span>{lines[3]}</span>
+      </li>
+    </ol>
+  );
+}
+
+/** The start screen: a hero, the big button right under it, then the three steps as small tiles. */
 function StartCard({ onStart }: { onStart: () => void }) {
+  const lines = ptpRoundCardLines(1, false);
   return (
     <Screen title="Pass the Phone" focusKey="start">
-      <div class="stack">
-        <MascotPair size={64} />
-        <p>
-          <strong>{ptpRoundCardLines(1, false)[0]}</strong>
-        </p>
-        <p>{ptpRoundCardLines(1, false)[1]}</p>
-        <p class="small">{ptpRoundCardLines(1, false)[3]}</p>
-        <Button primary block onClick={onStart}>
+      <div class="ptp stack">
+        <div class="ptp-hero">
+          <div class="ptp-hero-row">
+            <Mascot who="floyd" size={88} pose="wave" />
+            <span class="ptp-hero-phone" aria-hidden="true">
+              <GameIcon name="people" size={30} />
+            </span>
+            <Mascot who="bud" size={88} pose="happy" />
+          </div>
+          <p class="ptp-hero-title">Two people, one phone.</p>
+          <p class="ptp-hero-note">Four quick rounds.</p>
+        </div>
+        <Button primary big block sound gameIcon="play" onClick={onStart}>
           Start a set
         </Button>
+        <ol class="ptp-tiles">
+          <PtpTile icon="people" tone="grape" text="Take turns being the reader." />
+          <PtpTile icon="cards" tone="mint" text={lines[1]} />
+          <PtpTile icon="heart" tone="sunny" text={lines[3]} />
+        </ol>
       </div>
     </Screen>
+  );
+}
+
+/** One step on the start screen: a candy icon tile and one short line. */
+function PtpTile({ icon, tone, text }: { icon: GameIconName; tone: string; text: string }) {
+  return (
+    <li class="ptp-tile">
+      <span class={'mini-icon ' + tone} aria-hidden="true">
+        <GameIcon name={icon} size={22} />
+      </span>
+      <span class="ptp-tile-text">{text}</span>
+    </li>
   );
 }
 
@@ -122,20 +194,28 @@ function Summary({ save, content, today, set, onStart }: SummaryProps) {
   const badgeNames = engine.badgeViews(save, content, today);
   return (
     <Screen title="Pass the Phone" focusKey="summary">
-      <div class="stack-lg">
-        <div class="stack-sm">
-          <p>
-            <strong>{ptpTotalLine(summary.total)}</strong>
-          </p>
-          <p>{ptpBestLine(summary.best)}</p>
+      <div class="ptp stack-lg">
+        <div class="win-card is-solved">
+          <div class="win-mascots">
+            <Mascot who="floyd" size={72} pose="happy" />
+            <Mascot who="bud" size={72} pose="happy" />
+          </div>
+          <p class="win-shout">Set done!</p>
+          <p class="result-line">{ptpTotalLine(summary.total)}</p>
+          <p class="win-note">{ptpBestLine(summary.best)}</p>
         </div>
-        <ol class="rows">
+        <ol class="ptp-summary">
           {summary.rounds.map((round, index) => (
-            <li key={round.itemId} class="summary-row">
-              <span class="title">
-                Round {index + 1}: {round.term}
+            <li key={round.itemId} class={round.solved ? 'summary-row is-solved' : 'summary-row'}>
+              <span class="word-mark" aria-hidden="true">
+                {round.solved ? <Icon name="check" /> : <GameIcon name="learn" size={20} />}
               </span>
-              <span class="note">{roundSummaryLine(round)}</span>
+              <span class="word-main">
+                <span class="title">
+                  Round {index + 1}: {round.term}
+                </span>
+                <span class="note">{roundSummaryLine(round)}</span>
+              </span>
             </li>
           ))}
         </ol>
@@ -144,15 +224,10 @@ function Summary({ save, content, today, set, onStart }: SummaryProps) {
           for (const view of badgeNames) {
             if (view.id === id) name = view.name;
           }
-          return (
-            <div class="new-badge stamp" key={id}>
-              <Badge id={id} earned size={72} />
-              <p>New badge: {name}</p>
-            </div>
-          );
+          return <NewBadge key={id} id={id} name={name} />;
         })}
         <div class="stack-sm">
-          <Button primary block onClick={() => navigate('home')}>
+          <Button primary big block onClick={() => navigate('home')}>
             Done
           </Button>
           <Button block onClick={onStart}>

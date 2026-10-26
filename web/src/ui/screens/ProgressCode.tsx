@@ -2,6 +2,8 @@ import { useState } from 'preact/hooks';
 import { Screen } from '../components/Screen';
 import { Button, LinkButton } from '../components/Button';
 import { Announcer } from '../components/BottomBar';
+import { GameIcon } from '../components/GameIcon';
+import '../../styles/screens.css';
 import { copyText, selectTextOf } from '../../platform/share';
 import { engine } from '../engine';
 import { commit, useApp } from '../store';
@@ -27,8 +29,12 @@ export function GetCodeScreen() {
   }
   return (
     <Screen title="Get a progress code">
-      <div class="stack">
-        <p id="progress-code" class="code-text">
+      <div class="code-screen stack">
+        <div class="key-card">
+          <span class="key-card-icon" aria-hidden="true">
+            <GameIcon name="key" size={26} />
+          </span>
+          <p id="progress-code" class="code-text">
           {/* Line breaks only after a dash, so no group of 4 is split when someone copies it by hand. */}
           {code.split('-').map((group, i) => (
             <span key={i}>
@@ -37,13 +43,15 @@ export function GetCodeScreen() {
               <span class="nowrap">{group}</span>
             </span>
           ))}
-        </p>
-        <Button block onClick={copy} icon="copy">
+          </p>
+        </div>
+        <Button primary big block onClick={copy} icon="copy">
           Copy
         </Button>
-        <p>
-          Save a picture of your screen or write this down. On a new phone, open Settings, then Use a progress
-          code, and type or paste it in.
+        {message ? <p class="code-message">{message}</p> : null}
+        <p class="soft-note">
+          Save a picture of your screen or write this down. On a new phone, open Settings, then "Use a progress
+          code," and type or paste it in.
         </p>
         <Announcer message={message} />
       </div>
@@ -88,8 +96,10 @@ export function UseCodeScreen() {
   }
   return (
     <Screen title="Use a progress code">
-      <form class="stack" onSubmit={submit}>
-        <label for="progress-input">Your progress code</label>
+      <form class="code-screen stack" onSubmit={submit}>
+        <label class="field-label" for="progress-input">
+          Your progress code
+        </label>
         <textarea
           id="progress-input"
           class="field"
@@ -99,11 +109,14 @@ export function UseCodeScreen() {
           autocomplete="off"
           spellcheck={false}
         />
-        <Button primary block onClick={() => submit(new Event('submit'))}>
+        <Button primary big block onClick={() => submit(new Event('submit'))}>
           Use this code
         </Button>
-        {undo ? <Button onClick={undoLoad}>Undo</Button> : null}
-        <LinkButton block href={hrefFor('home')}>Home</LinkButton>
+        {message ? <p class="code-message">{message}</p> : null}
+        {undo ? <Button block onClick={undoLoad}>Undo</Button> : null}
+        <LinkButton block variant="ghost" href={hrefFor('me')}>
+          Back to Me
+        </LinkButton>
         <Announcer message={message} />
       </form>
     </Screen>

@@ -95,7 +95,7 @@ describe('practice and old tech lists', function () {
 
     const result = nextWord(state, content, 'oldtech', dateOfDay(1));
 
-    expect(result).toEqual({ message: 'New old tech opens Wednesday, October 28.' });
+    expect(result).toEqual({ message: 'New old tech opens Tuesday, October 27.' });
   });
 
   it('returns the old tech completion message', function () {
@@ -115,7 +115,7 @@ describe('practice and old tech lists', function () {
     const list = oldTechList(state, content, dateOfDay(1));
 
     expect(list[1].open).toBe(false);
-    expect(list[1].lockLine).toBe('Opens Wednesday, October 28.');
+    expect(list[1].lockLine).toBe('Opens Tuesday, October 27.');
     expect(nextWord(state, content, 'oldtech', dateOfDay(1))).toEqual({ entry: list[0] });
   });
 });

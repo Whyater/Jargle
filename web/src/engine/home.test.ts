@@ -60,7 +60,7 @@ it("counts one due review item once", () => {
 });
 
 it("shows the prelaunch phase before day one", () => {
-  const view = homeView(newState(), buildContent(), "2026-10-25");
+  const view = homeView(newState(), buildContent(), "2026-10-24");
   expect(view.phase).toBe("prelaunch");
   expect(view.gentleLine).toBeNull();
 });

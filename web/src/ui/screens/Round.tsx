@@ -4,22 +4,25 @@ import { engine } from '../engine';
 import { useApp, commit } from '../store';
 import { goBack } from '../router';
 import { playSound } from '../../platform/audio';
+import { feedback } from '../components/feedback';
 import { Screen } from '../components/Screen';
 import { Button } from '../components/Button';
 import { AnswerCard } from '../components/AnswerCard';
-import { Battery } from '../components/Battery';
-import { Mascot } from '../components/Mascot';
 import { BottomBar, InlineStrip, Announcer, usePinned } from '../components/BottomBar';
-import { RoundAfter } from './RoundAfter';
+import { EnergyMeter, RoundAfter } from './RoundAfter';
 import {
+  justEnded,
   newBadgesByRound,
   shouldIgnoreNextClue,
   stripTextAfterTap,
   tallestMessage,
+  xpByRound,
 } from './roundLogic';
+import { MascotSays } from '../components/MascotSays';
+import { poseForMood } from '../art';
+import { levelReached, markSeenLevel, readXp } from './homeLogic';
+import type { MascotPose } from '../art';
 import './round.css';
-
-const endedRounds = new Set<string>();
 
 /** "No. 12" for a daily round key like "d:12"; other rounds have no number. */
 function catalogNumber(roundKey: string): string | undefined {
@@ -69,27 +72,39 @@ export function RoundScreen({ roundKey }: { roundKey: string }) {
 
 function EndedMissBoard({ roundKey, view }: { roundKey: string; view: RoundView }) {
   const [open, setOpen] = useState(false);
+  // Bring the right answer into view, since the banner points to it. It waits a moment
+  // because the screen frame scrolls to the top when it opens.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const answer = document.querySelector('.answer-card.is-answer');
+      if (!answer) return;
+      const box = answer.getBoundingClientRect();
+      const bar = document.querySelector('.after-actions');
+      const bottom = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+      if (box.bottom > bottom) window.scrollBy(0, box.bottom - bottom + 16);
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, []);
   if (open) return <RoundAfter roundKey={roundKey} view={view} />;
   return (
     <Screen title={view.title} runhead={catalogNumber(roundKey)}>
-      <div class="round stack">
-        <div class="battery-wrap">
-          <div class="battery-row">
-            <Battery bars={view.bars} />
-            <Mascot who="bud" size={56} mood="sympathetic" />
-          </div>
-          <p>{view.batteryLine}</p>
+      <div class="round play-screen stack">
+        <EnergyMeter view={view} />
+        <div class="miss-banner">
+          <MascotSays who="bud" pose="oops" size={64} text="Here's the answer. A miss still teaches you a word." />
         </div>
-        <ul class="cards">
+        <ul class="cards play-cards">
           {view.cards.map((card, i) => (
             <li key={card.term}>
               <AnswerCard card={card} index={i + 1} onPick={() => undefined} />
             </li>
           ))}
         </ul>
-        <Button primary block onClick={() => setOpen(true)}>
-          See what it means
-        </Button>
+        <div class="after-actions">
+          <Button primary big block onClick={() => setOpen(true)}>
+            See what it means
+          </Button>
+        </div>
         <Announcer message="" />
       </div>
     </Screen>
@@ -105,7 +120,9 @@ function PlayingRound({ roundKey, view }: { roundKey: string; view: RoundView })
   const [anchor, setAnchor] = useState<'card' | 'clue' | 'button' | 'flip'>('button');
   const [confirm, setConfirm] = useState(false);
   const [confirmReady, setConfirmReady] = useState(false);
-  const [mood, setMood] = useState<'idle' | 'happy' | 'sympathetic'>(view.budMood);
+  const [pose, setPose] = useState<MascotPose>(poseForMood(view.budMood));
+  // Index of the clue that was just added, so only that one flips in.
+  const [flipClue, setFlipClue] = useState(-1);
   const [peek, setPeek] = useState(false);
   const [reveal, setReveal] = useState<{ kind: 'card' | 'clue' } | null>(null);
   const cardList = useRef<HTMLUListElement>(null);
@@ -225,29 +242,59 @@ function PlayingRound({ roundKey, view }: { roundKey: string; view: RoundView })
     // A new object each time, so the scroll effect runs again even for the same kind.
     if (result.outcome === 'wrong') setReveal({ kind: 'card' });
     else if (action.type === 'nextClue') setReveal({ kind: 'clue' });
-    setMood(nextView.budMood);
+    if (action.type === 'nextClue' && nextView.clues.length > view.clues.length) {
+      setFlipClue(nextView.clues.length - 1);
+    }
+    // Bud looks worried after a miss and thinks while you pick.
+    let nextPose = poseForMood(nextView.budMood);
+    if (nextPose === 'idle' && action.type === 'select') nextPose = 'think';
+    setPose(nextPose);
     if (action.type === 'select') {
       setFirstTap(true);
       playSound('tap');
     }
     if (action.type === 'nextClue') playSound('flick');
+    // A round that ends by crossing into a new level plays the level-up sound instead of the
+    // usual one, so the player hears one cheer, not two stacked chimes.
+    const xpAfter = readXp(result.state);
+    const crossed = levelReached(xpAfter - (result.xpGained || 0), xpAfter);
+    // Mark it now, not only on the reveal: the player can leave from the miss board, and Play
+    // would then cheer the same level a second time.
+    if (crossed) markSeenLevel(crossed);
     if (action.type === 'check') {
       setFirstCheck(true);
       if (result.outcome === 'wrong') {
-        playSound('tock');
+        feedback('wrong');
         checkRef.current?.focus();
       }
-      if (result.outcome === 'solved') playSound('chime');
-      if (result.outcome === 'learned') playSound('twoNotes');
+      if (result.outcome === 'solved') feedback(crossed ? 'levelUp' : 'correct');
+      if (result.outcome === 'learned') {
+        if (crossed) feedback('levelUp');
+        else playSound('twoNotes');
+      }
     }
-    if (action.type === 'showAnswer') playSound('twoNotes');
-    if (result.state.rounds[roundKey] && result.state.rounds[roundKey].status !== 'playing') {
-      endedRounds.add(roundKey);
+    if (action.type === 'showAnswer') {
+      if (crossed) feedback('levelUp');
+      else playSound('twoNotes');
+    }
+    const record = result.state.rounds[roundKey];
+    if (record && record.status !== 'playing') {
+      justEnded.add(roundKey);
       newBadgesByRound.set(roundKey, result.newBadges);
+      // The engine adds the XP when the round ends; the reveal shows how much.
+      xpByRound.set(roundKey, result.xpGained);
     }
   }
 
   const line = message || '';
+  let pickPrompt = 'Which word is it?';
+  if (view.firstRound && largestScroll && !firstCheck) {
+    pickPrompt = 'Scroll down for all four words.';
+  } else if (view.firstRound && !firstTap) {
+    pickPrompt = 'Pick a word, then tap Check.';
+  } else if (pose === 'oops') {
+    pickPrompt = 'Not that one. Pick again!';
+  }
   const inline =
     !pinned && line ? (
       <InlineStrip
@@ -261,16 +308,10 @@ function PlayingRound({ roundKey, view }: { roundKey: string; view: RoundView })
   return (
     <Screen title={view.title} runhead={catalogNumber(roundKey)}>
       <div class="round stack">
-        <div class="battery-wrap">
-          <div class="battery-row">
-            <Battery bars={view.bars} />
-            <Mascot who="bud" size={56} mood={mood} />
-          </div>
-          <p>{view.batteryLine}</p>
-          {view.justForFun ? <p>{view.justForFun}</p> : null}
-        </div>
-        {view.firstRoundHint ? <p>{view.firstRoundHint}</p> : null}
-        {view.mode === 'ptp' ? <p>Reader: add your own hint if you like.</p> : null}
+        <EnergyMeter view={view}>
+          {view.justForFun ? <p class="energy-note">{view.justForFun}</p> : null}
+        </EnergyMeter>
+        {view.mode === 'ptp' ? <p class="round-hint">Reader: add your own hint if you like.</p> : null}
         {view.mode === 'ptp' ? (
           <div class="choice-row">
             <button
@@ -284,22 +325,35 @@ function PlayingRound({ roundKey, view }: { roundKey: string; view: RoundView })
             {peek ? <div class="note-box">Answer: {view.item.term}</div> : null}
           </div>
         ) : null}
-        <ol class="clues" ref={clueList}>
+        <p class="climb-label">
+          <span>Clues</span>
+          <span class="climb-pips" aria-hidden="true">
+            {view.item.clues.map((_clue, i) => (
+              <span key={i} class={i < view.clues.length ? 'pip on' : 'pip'} />
+            ))}
+          </span>
+          <span class="climb-count">
+            {view.clues.length} of {view.item.clues.length}
+          </span>
+        </p>
+        <ol class="clues clue-stack" ref={clueList}>
           {view.clues.map((clue, i) => (
-            <li key={i} class={i === view.clues.length - 1 ? 'clue newest slide' : 'clue'}>
-              <span class="n">{i + 1}</span>
-              {clue}
+            // Only a clue added on this visit flips in; the ones already there just sit still.
+            <li key={i} class={i === view.clues.length - 1 ? 'clue newest' + (flipClue === i ? ' flip-in' : '') : 'clue'}>
+              <span class="n" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span class="visually-hidden">Clue {i + 1}: </span>
+              <span class="clue-text">{clue}</span>
             </li>
           ))}
         </ol>
         {inline && anchor === 'clue' ? inline : null}
-        {view.firstRound && !firstTap && !largestScroll ? <p class="first-label">Tap a word to pick it.</p> : null}
-        {view.firstRound && largestScroll && !firstCheck ? (
-          <p class="first-label">
-            Scroll to see all four words. Tap one to pick it, then tap Check at the bottom.
-          </p>
-        ) : null}
-        <ul class="cards" ref={cardList}>
+        {/* Bud asks the question. On the first round he also explains the controls. */}
+        <div class="pick-row">
+          <MascotSays who="bud" pose={pose} size={76} text={pickPrompt} lines={BUD_TIPS} />
+        </div>
+        <ul class="cards play-cards" ref={cardList}>
           {view.cards.map((card, i) => (
             <li key={card.term}>
               <AnswerCard
@@ -324,12 +378,11 @@ function PlayingRound({ roundKey, view }: { roundKey: string; view: RoundView })
             <p>
               <strong>Show the answer now?</strong>
             </p>
-            <Button block onClick={() => setConfirm(false)}>
+            <Button block variant="mint" onClick={() => setConfirm(false)}>
               Keep playing
             </Button>
             <Button
               block
-              primary
               disabled={!confirmReady}
               onClick={() => tap({ type: 'showAnswer' }, 'button')}
             >
@@ -339,6 +392,7 @@ function PlayingRound({ roundKey, view }: { roundKey: string; view: RoundView })
         ) : view.canShowAnswer ? (
           <Button
             block
+            variant="ghost"
             onClick={() => {
               setConfirm(true);
               setAnchor('button');
@@ -355,24 +409,44 @@ function PlayingRound({ roundKey, view }: { roundKey: string; view: RoundView })
           message={line}
           tallestMessage={tallest}
         >
-          {view.firstRound && !firstTap && !largestScroll ? <p class="first-label">Then tap Check.</p> : null}
-          <Button
-            primary
-            block
-            id="check"
-            buttonRef={(el) => {
-              checkRef.current = el;
-            }}
-            onClick={() => tap({ type: 'check' }, 'button')}
-          >
-            Check
-          </Button>
-          <Button block disabled={!view.nextClue.enabled} onClick={() => tap({ type: 'nextClue' }, 'clue')}>
-            {view.nextClue.enabled ? view.nextClue.label : view.nextClue.reason || view.nextClue.label}
-          </Button>
+          <div class="bar-buttons bar-row">
+            <Button
+              variant="sunny"
+              gameIcon="bolt"
+              disabled={!view.nextClue.enabled}
+              onClick={() => tap({ type: 'nextClue' }, 'clue')}
+            >
+              <ClueLabel text={view.nextClue.enabled ? view.nextClue.label : view.nextClue.reason || view.nextClue.label} />
+            </Button>
+            <Button
+              primary
+              id="check"
+              buttonRef={(el) => {
+                checkRef.current = el;
+              }}
+              onClick={() => tap({ type: 'check' }, 'button')}
+            >
+              Check
+            </Button>
+          </div>
         </BottomBar>
         <Announcer message={line} />
       </div>
     </Screen>
+  );
+}
+
+// What Bud says when you tap him during a round.
+const BUD_TIPS = ['You can do it!', 'Read the clue one more time.', 'Not sure? Next clue helps.'];
+
+/** "Next clue (costs 1 bar)" shows as a bold "Next clue" with the cost in small print under it. */
+function ClueLabel({ text }: { text: string }) {
+  const cut = text.indexOf(' (');
+  if (cut === -1 || text.charAt(text.length - 1) !== ')') return <>{text}</>;
+  return (
+    <span class="clue-label">
+      <span>{text.slice(0, cut)}</span>{' '}
+      <span class="clue-label-cost">{text.slice(cut + 2, text.length - 1)}</span>
+    </span>
   );
 }

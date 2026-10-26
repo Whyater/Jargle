@@ -2,13 +2,14 @@ import { useState } from 'preact/hooks';
 import { engine } from '../engine';
 import { useApp } from '../store';
 import { hrefFor, goBack } from '../router';
-import { openRound, openReveal, shortDate } from '../actions';
+import { openRound, shortDate } from '../actions';
 import { Screen } from '../components/Screen';
 import { Announcer } from '../components/BottomBar';
 import { Button, LinkButton } from '../components/Button';
-import { Icon } from '../components/Icons';
-import { Exchange } from '../components/Exchange';
+import { MascotSays } from '../components/MascotSays';
 import { OLD_TECH_INTRO } from '../../engine/api';
+import { WordRow } from './Practice';
+import '../../styles/screens.css';
 
 export function OldTechScreen() {
   const app = useApp();
@@ -22,62 +23,43 @@ export function OldTechScreen() {
   }
   return (
     <Screen title="Floyd's Old Tech">
-      <Exchange
-        lines={[{ speaker: 'floyd', text: OLD_TECH_INTRO }]}
-      />
-      <p class="small">Just for fun: this doesn't change your streak or Days learned.</p>
-      {entries.length ? (
-        <ul class="rows">
-          {entries.map((entry, i) => (
-            <li key={entry.key}>
-              {entry.open ? (
-                <a
-                  class="row-link"
-                  href={hrefFor('play', entry.key)}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    if (entry.finished) openReveal(entry.key);
-                    else openRound(entry.key, entry.itemId, 'oldtech');
-                  }}
-                >
-                  <span class="main">
-                    <span class="title">{entry.label}</span>
-                    <span class="note">
-                      Old tech {i + 1}{entry.date ? ' · ' + shortDate(entry.date) : ''}
-                    </span>
-                  </span>
-                  {entry.finished ? (
-                    <span class="mark">
-                      <Icon name="check" />
-                    </span>
-                  ) : null}
-                </a>
-              ) : (
-                <div class="row-link" aria-disabled="true">
-                  <span class="main">
-                    <span class="title">{entry.label}</span>
-                    <span class="note">
-                      Old tech {i + 1} · <Icon name="lock" /> {entry.lockLine}
-                    </span>
-                  </span>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {message ? (
-        <div class="note-box">
-          <p>{message}</p>
-          <Button onClick={() => goBack()}>Back</Button>
-        </div>
-      ) : null}
-      <div class="stack-sm">
-        <Button primary block onClick={next}>
+      <div class="words stack">
+        <MascotSays who="floyd" pose="wave" text={OLD_TECH_INTRO} />
+        <p class="soft-note small">Just for fun: this doesn't change your streak or Days learned.</p>
+        <Button primary big block onClick={next}>
           Next word
         </Button>
-        <LinkButton block href={hrefFor('home')}>
-          Home
+        {message ? (
+          <div class="soft-note stack-sm">
+            <p>{message}</p>
+            <Button small onClick={() => goBack()}>
+              Back
+            </Button>
+          </div>
+        ) : null}
+        {entries.length ? (
+          <ul class="word-list">
+            {entries.map((entry, i) => {
+              // A finished word shows its name. An unplayed one shows its number, so the list
+              // is not a stack of identical "Not finished yet" rows.
+              let title = entry.label;
+              let note = 'Old tech ' + (i + 1);
+              if (!entry.finished) {
+                title = 'Old tech ' + (i + 1);
+                note = entry.open ? entry.label : '';
+              }
+              if (entry.open && entry.date) note += ' · ' + shortDate(entry.date);
+              if (!entry.open && entry.lockLine) note = note ? note + ' · ' + entry.lockLine : entry.lockLine;
+              return (
+                <li key={entry.key}>
+                  <WordRow entry={entry} title={title} mode="oldtech" note={note} />
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+        <LinkButton block variant="ghost" href={hrefFor('learn')}>
+          Back to Learn
         </LinkButton>
       </div>
       <Announcer message={message || ''} />

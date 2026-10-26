@@ -132,6 +132,7 @@ function setup(key: string, kind: FixtureKind): void {
       message: action.type === 'select' ? 'Selected. Now tap Check.' : null,
       outcome: action.type === 'select' ? 'selected' : 'none',
       newBadges: [],
+      xpGained: 0,
     };
   };
   engine.shareText = () => 'Jargle #12: 4 bars left';

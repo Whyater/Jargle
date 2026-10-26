@@ -16,7 +16,7 @@ describe('api', () => {
     expect(typeof api.shareLines).toBe('function');
     expect(typeof api.todaysLesson).toBe('function');
     expect(typeof api.dealPtpSet).toBe('function');
-    expect(api.LAUNCH_DATE).toBe('2026-10-26');
+    expect(api.LAUNCH_DATE).toBe('2026-10-25');
   });
 
   it('runs on a fresh state without throwing', () => {
